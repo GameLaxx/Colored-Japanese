@@ -1,23 +1,74 @@
 import kuromoji from 'kuromoji'
 
 let tokenizer = null;
+let known_words = null;
 let learning_words = null;
+let spanChildren = [];
+let child_over = null;
+let keysPressed = new Set();
 
 kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTokenizer) => {
   if (err) throw err;
   
   tokenizer = builtTokenizer;
-  loadWordList();
+  loadWordList("known", '/known.txt');
+  loadWordList("learning", '/learning.txt');
   console.log("*-* Color subs loaded !")
 });
 
-async function loadWordList(url = '/learning.txt') {
+document.addEventListener('mousemove', (event) => {
+  child_over = undefined;
+  const x = event.clientX;
+  const y = event.clientY;
+  const elementsUnderMouse = document.elementsFromPoint(x, y);
+  for(let span of spanChildren){
+    const matchedChild = Array.from(span.children).find(child =>
+      elementsUnderMouse.includes(child)
+    );
+    if (matchedChild) {
+      child_over = matchedChild;
+      return;
+    }
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  keysPressed.add(e.key.toLowerCase());
+
+  if (keysPressed.has('shift') && keysPressed.has('a')) {
+    console.log("In a  + shift")
+    if(child_over != undefined && child_over.dataset.tag == "") {
+      console.log("Saving", child_over.dataset.base);
+      known_words.add(child_over.dataset.base);
+    }
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  keysPressed.delete(e.key.toLowerCase());
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "require_words") {
+    console.log("*-* Require received !");
+    const text = Array.from(known_words).join('\n');
+    sendResponse({text: text });
+  }
+  return true;
+});
+
+async function loadWordList(type, url) {
   const url_ext = chrome.runtime.getURL(url);
   const response = await fetch(url_ext);
   const text = await response.text();
   const words = text.split('\n');
-  learning_words = new Set(words);
-  console.log(`*-* ${learning_words.size} words loaded`, words);
+  if(type == "known"){
+    known_words = new Set(words);
+    console.log(`*-* ${known_words.size} words loaded`);
+  }else{
+    learning_words = new Set(words);
+    console.log(`*-* ${learning_words.size} words loaded`);
+  }
 }
 
 function isVerb(token){
@@ -44,14 +95,25 @@ function editText(tokens, index){
       continue;
     }
     if(tokens[i].reading == undefined){
-      ret += `<ruby data-base="${tokens[i].surface_form}" data-tag="skip" style="border: solid 1px red;">${tokens[i].surface_form}</ruby>`;
+      ret += `<ruby data-base="${tokens[i].surface_form}" data-tag="skip">${tokens[i].surface_form}</ruby>`;
       continue;
     }
     tmp += tokens[i].surface_form;
-    if(is_verb == 0 && is_parenthesis_open == 0 && is_parenthesis_close == 0){
+    if(is_verb == 0 && is_parenthesis_open == false && is_parenthesis_close == false){
       base = tokens[i].basic_form;
+      if(tokens[i].pos == "助詞"){
+        color = "#42c8f5";
+      }else if(tokens[i].pos == "副詞"){
+        color = "#ff816e";
+      }else if(learning_words.has(base)){
+        color = "#faed75";
+      }else if(known_words.has(base)){
+        color = "#02d802";
+      }else{
+        color = "white";
+      }
     }
-    if(tokens[i].pos == "記号"){
+    if(tokens[i].pos == "記号" || tokens[i].pos == "感動詞" || tokens[i].pos == "連体詞" || tokens[i].pos == "感動詞" || tokens[i].pos == "助動詞"){
       tag = "skip";
     }
     is_parenthesis_open = is_parenthesis_open || tokens[i].pos_detail_1 == "括弧開";
@@ -72,22 +134,21 @@ function editText(tokens, index){
       if(tokens[i].conjugated_form == "連用タ接続" && tokens[i + 1].basic_form == "て"){
         continue;
       }
-      if(tokens[i + 1].pos == "助動詞"){
+      if(tokens[i + 1].pos == "助動詞" || tokens[i + 1].pos_detail_1 == "非自立"){
         continue;
       }
       is_verb = 0;
     }
     if(tag == "skip"){
       color = "white";
-    }else if(learning_words.has(base)){
-      color = "#02d802";
-    }else{
-      color = "white";
     }
     ret += `<ruby data-base="${base}" data-tag="${tag}" style="border: solid 1px red; color : ${color}">${tmp}</ruby>`;
     tmp = "";
     base = "";
-    tag = ""
+    tag = "";
+    is_verb = 0;
+    is_parenthesis_close = false;
+    is_parenthesis_open = false;
   }
   return ret;
 }
@@ -126,28 +187,19 @@ function observeNetflixElement(selector, callback) {
 const tryObserve = () => {
   const selector = ".player-timedtext";
   const target = document.querySelector(selector);
-  let current_content = "";
-
   if (target) {
     console.log("*-* Found the subs !")
     observeNetflixElement(selector, (mutation) => {
       const subdiv = mutation.target.querySelector(".player-timedtext-text-container");
       if(!subdiv){
-        console.log("No div subs..");
         return;
       }
       const span_parent = subdiv.querySelector("span");
       if(!span_parent){
-        console.log("No parent span..");
         return;
       }
-      span_parent.addEventListener('click', (event) => {
-        event.stopPropagation();
-        console.log("Clic détecté sur :", event.target); // le plus profond
-      });
-      const spanChildren = span_parent.querySelectorAll("span");
+      spanChildren = span_parent.querySelectorAll("span");
       if(spanChildren.length == 0){
-        console.log("No span subs..");
         return
       }
       for(let i = 0; i < spanChildren.length; i++){

@@ -15,7 +15,8 @@
 
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "downloads"
   ],
 
   "host_permissions": [
@@ -37,7 +38,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["dict/**", "learning.txt"],
+      "resources": ["dict/**", "learning.txt", "known.txt"],
       "matches": ["<all_urls>"]
     }
   ]

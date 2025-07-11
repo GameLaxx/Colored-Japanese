@@ -3,9 +3,6 @@ import { crx } from '@crxjs/vite-plugin'
 import manifest from './public/manifest.json'
 
 export default defineConfig({
-  define: {
-    'crypto.hash': 'undefined',
-  },
   plugins: [crx({ manifest })],
   resolve: {
     alias: {
