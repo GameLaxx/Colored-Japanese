@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Colored Subs",
+  "version": "1.0",
+  "description": "Add color to subs depending on the knowledge of the word",
+
+  "action": {
+    "default_icon": {
+      "16": "icons/icon.jpg",
+      "48": "icons/icon.jpg",
+      "128": "icons/icon.jpg"
+    }
+  },
+
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "https://129.151.239.108/*"
+  ],
+
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://www.netflix.com/*"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["dict/**"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
