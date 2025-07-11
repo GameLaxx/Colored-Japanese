@@ -1,21 +1,23 @@
 import kuromoji from 'kuromoji'
 
 let tokenizer = null;
+let learning_words = null;
 
 kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTokenizer) => {
   if (err) throw err;
   
   tokenizer = builtTokenizer;
-  const tokens = tokenizer.tokenize("思い出す機会があって");
-  console.log(tokens);
-  console.log(tokens[0])
+  loadWordList();
   console.log("*-* Color subs loaded !")
 });
 
-function katakanaToHiragana(str) {
-  return str.replace(/[\u30A1-\u30F6]/g, (char) =>
-    String.fromCharCode(char.charCodeAt(0) - 0x60)
-  );
+async function loadWordList(url = '/learning.txt') {
+  const url_ext = chrome.runtime.getURL(url);
+  const response = await fetch(url_ext);
+  const text = await response.text();
+  const words = text.split('\n');
+  learning_words = new Set(words);
+  console.log(`*-* ${learning_words.size} words loaded`, words);
 }
 
 function isVerb(token){
@@ -28,14 +30,15 @@ function isVerb(token){
   }
 }
 
-function editText(tokens){
-  let ret = "";
+function editText(tokens, index){
+  let ret = (index == 0) ? "" : "<br>";
   let base = "";
   let tmp = "";
   let is_parenthesis_open = false;
   let is_parenthesis_close = false;
   let is_verb = 0; // 0 is not, 1 is maybe (sahen), 2 is yes
   let tag = "";
+  let color = "";
   for(let i = 0; i < tokens.length; i++){
     if(tokens[i] == undefined){
       continue;
@@ -74,7 +77,14 @@ function editText(tokens){
       }
       is_verb = 0;
     }
-    ret += `<ruby data-base="${base}" data-tag="${tag}" style="border: solid 1px red;">${tmp}</ruby>`;
+    if(tag == "skip"){
+      color = "white";
+    }else if(learning_words.has(base)){
+      color = "#02d802";
+    }else{
+      color = "white";
+    }
+    ret += `<ruby data-base="${base}" data-tag="${tag}" style="border: solid 1px red; color : ${color}">${tmp}</ruby>`;
     tmp = "";
     base = "";
     tag = ""
@@ -82,9 +92,9 @@ function editText(tokens){
   return ret;
 }
 
-function editBase(element){
+function editBase(element, index){
     const tokens = tokenizer.tokenize(element.textContent);
-    element.innerHTML = editText(tokens);
+    element.innerHTML = editText(tokens, index);
     return
 }
 
@@ -140,12 +150,12 @@ const tryObserve = () => {
         console.log("No span subs..");
         return
       }
-      for(let span of spanChildren){
-        if(span.lang != "ja"){
+      for(let i = 0; i < spanChildren.length; i++){
+        if(spanChildren[i].lang != "ja"){
           continue;
         }
-        editBase(span);
-        console.log("Changement détecté :", span.textContent);
+        editBase(spanChildren[i], i);
+        console.log("Changement détecté :", spanChildren[i].textContent);
       }
     });
   } else {

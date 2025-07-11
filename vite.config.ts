@@ -3,6 +3,9 @@ import { crx } from '@crxjs/vite-plugin'
 import manifest from './public/manifest.json'
 
 export default defineConfig({
+  define: {
+    'crypto.hash': 'undefined',
+  },
   plugins: [crx({ manifest })],
   resolve: {
     alias: {
@@ -14,7 +17,7 @@ export default defineConfig({
       input: {
         content: 'src/content.js',
         background: 'src/background.js',
-        popupScript: 'src/popup.js'
+        popup: 'src/popup.html'
       }
     }
   }

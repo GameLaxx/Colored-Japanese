@@ -5,6 +5,7 @@
   "description": "Add color to subs depending on the knowledge of the word",
 
   "action": {
+    "default_popup": "src/popup.html",
     "default_icon": {
       "16": "icons/icon.jpg",
       "48": "icons/icon.jpg",
@@ -36,7 +37,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["dict/**"],
+      "resources": ["dict/**", "learning.txt"],
       "matches": ["<all_urls>"]
     }
   ]
