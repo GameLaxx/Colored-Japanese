@@ -1,4 +1,4 @@
-document.getElementById("helloBtn").addEventListener("click", function () {
+document.getElementById("save_btn").addEventListener("click", function () {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     const activeTab = tabs[0];
     const activeTabId = activeTab.id;
@@ -23,4 +23,22 @@ document.getElementById("helloBtn").addEventListener("click", function () {
 
     });
   });
+});
+
+document.getElementById('load_btn').addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function () {
+    const content = reader.result;  
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      const activeTab = tabs[0];
+      const activeTabId = activeTab.id;
+      chrome.tabs.sendMessage(activeTabId, { type: "send_words", text : content });
+    });
+  };
+
+  reader.readAsText(file);
 });

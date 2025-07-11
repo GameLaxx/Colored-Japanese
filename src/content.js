@@ -40,6 +40,7 @@ document.addEventListener('keydown', (e) => {
     if(child_over != undefined && child_over.dataset.tag == "") {
       console.log("Saving", child_over.dataset.base);
       known_words.add(child_over.dataset.base);
+      setToLocal();
     }
   }
 });
@@ -49,13 +50,42 @@ document.addEventListener('keyup', (e) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("*-* Message received", message.type)
   if (message.type === "require_words") {
     console.log("*-* Require received !");
     const text = Array.from(known_words).join('\n');
     sendResponse({text: text });
   }
+  if (message.type === "send_words") {
+    loadWordText(message.text);
+    setToLocal();
+  }
   return true;
 });
+
+function loadFromLocal(){
+  chrome.storage.local.get("userWords", (result) => {
+    const wordList = result.userWords || [];
+    const loadedSet = new Set(wordList);
+    known_words = new Set([...known_words, ...loadedSet]);
+  });
+}
+
+function setToLocal(){
+  chrome.storage.local.set({ userWords: Array.from(known_words) }, () => {
+  });
+}
+
+async function loadWordText(text){
+  const words = text.split('\n');
+  console.log(`Text with ${words.length} words given !`)
+  let i = 0;
+  for(let word of words){
+    i += 1;
+    known_words.add(word);
+  }
+  console.log(`*-* ${i} words loaded !`)
+}
 
 async function loadWordList(type, url) {
   const url_ext = chrome.runtime.getURL(url);
@@ -65,6 +95,7 @@ async function loadWordList(type, url) {
   if(type == "known"){
     known_words = new Set(words);
     console.log(`*-* ${known_words.size} words loaded`);
+    loadFromLocal();
   }else{
     learning_words = new Set(words);
     console.log(`*-* ${learning_words.size} words loaded`);
@@ -101,9 +132,9 @@ function editText(tokens, index){
     tmp += tokens[i].surface_form;
     if(is_verb == 0 && is_parenthesis_open == false && is_parenthesis_close == false){
       base = tokens[i].basic_form;
-      if(tokens[i].pos == "助詞"){
+      if(tokens[i].pos == "助詞"){ // particle
         color = "#42c8f5";
-      }else if(tokens[i].pos == "副詞"){
+      }else if(tokens[i].pos == "副詞"){ // adverbs
         color = "#ff816e";
       }else if(learning_words.has(base)){
         color = "#faed75";
@@ -113,11 +144,12 @@ function editText(tokens, index){
         color = "white";
       }
     }
-    if(tokens[i].pos == "記号" || tokens[i].pos == "感動詞" || tokens[i].pos == "連体詞" || tokens[i].pos == "感動詞" || tokens[i].pos == "助動詞"){
+    if(tokens[i].pos == "記号" || tokens[i].pos == "感動詞" || tokens[i].pos == "連体詞" || (is_verb == 0 && tokens[i].pos == "助動詞")){
+      // symbol, interjection, pre-noun adjectives, bound auxialary when not a verb
       tag = "skip";
     }
-    is_parenthesis_open = is_parenthesis_open || tokens[i].pos_detail_1 == "括弧開";
-    is_parenthesis_close = tokens[i].pos_detail_1 == "括弧閉";
+    is_parenthesis_open = is_parenthesis_open || tokens[i].pos_detail_1 == "括弧開"; // opened parenthesis
+    is_parenthesis_close = tokens[i].pos_detail_1 == "括弧閉"; // closed parenthesis
     is_verb = isVerb(tokens[i]);
     if(is_parenthesis_close){
       is_parenthesis_open = false;
@@ -134,7 +166,8 @@ function editText(tokens, index){
       if(tokens[i].conjugated_form == "連用タ接続" && tokens[i + 1].basic_form == "て"){
         continue;
       }
-      if(tokens[i + 1].pos == "助動詞" || tokens[i + 1].pos_detail_1 == "非自立"){
+      if(tokens[i + 1].pos == "助動詞" || tokens[i + 1].pos_detail_1 == "非自立" || tokens[i + 1].pos_detail_1 == "接尾"){
+        // bound auxialary, dependant verbs, suffix
         continue;
       }
       is_verb = 0;
@@ -142,7 +175,7 @@ function editText(tokens, index){
     if(tag == "skip"){
       color = "white";
     }
-    ret += `<ruby data-base="${base}" data-tag="${tag}" style="border: solid 1px red; color : ${color}">${tmp}</ruby>`;
+    ret += `<ruby data-base="${base}" data-tag="${tag}" style="color : ${color}">${tmp}</ruby>`;
     tmp = "";
     base = "";
     tag = "";
