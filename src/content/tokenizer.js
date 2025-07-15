@@ -117,7 +117,7 @@ export function editText(tokens, index, baseColor = "white"){
   return ret;
 }
 
-export function editBase(element){
+export function editBase(element, index){
   const tokens = _tokenizer.tokenize(element.textContent);
   element.innerHTML = editText(tokens, index);
   return

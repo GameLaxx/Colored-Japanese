@@ -1,5 +1,7 @@
 import { editBase } from "./tokenizer";
 
+export let spanChildren = [];
+
 function observeNetflixElement(selector, callback) {
   const targetNode = document.querySelector(selector);
 
@@ -33,16 +35,21 @@ export const tryObserve = () => {
     observeNetflixElement(selector, (mutation) => {
       const subdiv = mutation.target.querySelector(".player-timedtext-text-container");
       if(!subdiv){
+        console.log("No div..");
         return;
       }
       const span_parent = subdiv.querySelector("span");
       if(!span_parent){
+        console.log("No parent..");
         return;
       }
       spanChildren = span_parent.querySelectorAll("span");
       if(spanChildren.length == 0){
+        console.log("No children..");
         return
       }
+      
+      console.log("Found..");
       for(let i = 0; i < spanChildren.length; i++){
         if(spanChildren[i].lang != "ja"){
           continue;

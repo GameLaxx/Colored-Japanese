@@ -1,8 +1,7 @@
 import { learning_words, known_words, _tokenizer, navType, showBorder } from './tokenizer';
-import { tryObserve } from './subs_utils';
+import { spanChildren, tryObserve } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
-let spanChildren = [];
 let child_over = null;
 let keysPressed = new Set();
 
