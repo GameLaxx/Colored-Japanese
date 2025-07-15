@@ -58,6 +58,32 @@ function updateTarget(clickedElement) {
   });
 }
 
+function updateLocalStorage(event){
+  if (!event.target.classList.contains("delete_word")) {
+    return
+  }
+  const wordDiv = event.target.closest(".word");
+  const wordText = wordDiv.querySelector(".word_string").textContent.trim();
+  const tag = wordDiv.closest(".dictionary").dataset.tag;
+  if (!tag) {
+    return;
+  }
+  chrome.storage.local.get(tag, (result) => {
+    let words = result[tag] || [];
+    const newWords = words.filter(w => w !== wordText);
+    chrome.storage.local.set({ [tag]: newWords }, () => {
+      wordDiv.remove();
+    });
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      const activeTab = tabs[0];
+      const activeTabId = activeTab.id;
+      chrome.tabs.sendMessage(activeTabId, { type: "reload_words" }, (res) => {
+        true;
+      });
+    });
+  });
+}
+
 function localIdToHtmlId(id_str){
   if(id_str == "userWords"){
     return "known_tools"
@@ -68,15 +94,17 @@ function localIdToHtmlId(id_str){
 function loadDictionary(id_str){
   const pannel = document.getElementById(localIdToHtmlId(id_str));
   const dictionary = pannel.getElementsByClassName("dictionary")[0];
+  dictionary.dataset.tag = id_str;
   chrome.storage.local.get(id_str, (result) => {
     const wordList = result[id_str] || [];
     for(let word of wordList){
       const newWord = document.createElement("div");
       newWord.classList.toggle("word");
       const newText = document.createElement("p");
-      newWord.classList.toggle("word_string");
+      newText.classList.toggle("word_string");
       const newBtn = document.createElement("div");
-      newWord.classList.toggle("delete_word");
+      newBtn.classList.toggle("delete_word");
+      newBtn.addEventListener("click", (event) => updateLocalStorage(event));
       newText.textContent = word;
       newWord.append(newText);
       newWord.append(newBtn);

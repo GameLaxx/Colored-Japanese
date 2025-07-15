@@ -77,9 +77,8 @@ document.addEventListener('keyup', (e) => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("*-* Message received", message.type)
+  console.log("*-* Message received !", message.type);
   if (message.type === "require_words") {
-    console.log("*-* Require received !", known_words);
     const text = Array.from(known_words).join('\n');
     sendResponse({text: text });
   }
@@ -87,12 +86,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     loadWordText(message.text);
     setToLocal();
   }
+  if (message.type === "reload_words") {
+    known_words.clear();
+    loadFromLocal();
+  }
   return true;
 });
 
 function loadFromLocal(){
-  chrome.storage.local.get("userWords", (result) => {
-    const wordList = result.userWords || [];
+  chrome.storage.local.get("userKnownWords", (result) => {
+    const wordList = result.userKnownWords || [];
     for(let word of wordList){
       known_words.add(word);
     }
@@ -100,17 +103,17 @@ function loadFromLocal(){
   });
 }
 function setToLocal(){
-  chrome.storage.local.set({ userWords: Array.from(known_words) }, () => {
+  chrome.storage.local.set({ userKnownWords: Array.from(known_words) }, () => {
   });
 }
 function removeLocal(){
-  chrome.storage.local.remove("userWords", () => {
-    console.log("*-* Removed local storage for userWords.")
+  chrome.storage.local.remove("userKnownWords", () => {
+    console.log("*-* Removed local storage for userKnownWords.")
   });
 }
 function countLocal(){
-  chrome.storage.local.get("userWords", (result) => {
-    const wordList = result.userWords || [];
+  chrome.storage.local.get("userKnownWords", (result) => {
+    const wordList = result.userKnownWords || [];
     console.log("*-* In local : ", wordList);
     console.log("*-* In client : ", known_words);
   });
