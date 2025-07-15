@@ -1,4 +1,4 @@
-import { learning_words, known_words, _tokenizer, navType } from './tokenizer';
+import { learning_words, known_words, _tokenizer, navType, showBorder } from './tokenizer';
 import { tryObserve } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
@@ -54,6 +54,12 @@ document.addEventListener('keydown', (e) => {
       console.log("Saving", child_over.dataset.base);
       known_words.add(child_over.dataset.base);
       setToLocal();
+    }
+    return;
+  }
+  if (keysPressed.has('alt') && keysPressed.has('!')) {
+    if(child_over != undefined) {
+      showBorder(child_over);
     }
     return;
   }

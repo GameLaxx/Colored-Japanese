@@ -14,9 +14,20 @@ kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTo
 
 function isVerb(token){
   if(token.pos == "動詞" || token.pos == "助動詞"){
+    // verb, auxiliary verb
     return 2;
-  }else if(token.pos_detail_1 == "サ変接続"){
+  }else if(token.pos_detail_1 == "サ変接続" || token.basic_form == "て"){
+    // irregular conjugation with suru, te is a particul not a verb
     return 1;
+  }else{
+    return 0;
+  }
+}
+
+function isAdjective(token){
+  if(token.pos == "形容詞"){
+    // ajdective
+    return 2;
   }else{
     return 0;
   }
@@ -29,6 +40,7 @@ export function editText(tokens, index, baseColor = "white"){
   let is_parenthesis_open = false;
   let is_parenthesis_close = false;
   let is_verb = 0; // 0 is not, 1 is maybe (sahen), 2 is yes
+  let is_adjective = 0; // 0 is not, 2 is yes
   let tag = "";
   let color = "";
   for(let i = 0; i < tokens.length; i++){
@@ -40,7 +52,7 @@ export function editText(tokens, index, baseColor = "white"){
       continue;
     }
     tmp += tokens[i].surface_form;
-    if(is_verb == 0 && is_parenthesis_open == false && is_parenthesis_close == false){
+    if(is_verb == 0 && is_adjective == 0 && is_parenthesis_open == false && is_parenthesis_close == false){ // start of a new case
       base = tokens[i].basic_form;
       if(tokens[i].pos == "助詞"){ // particle
         color = "#42c8f5";
@@ -54,13 +66,14 @@ export function editText(tokens, index, baseColor = "white"){
         color = baseColor;
       }
     }
-    if(tokens[i].pos == "記号" || tokens[i].pos == "感動詞" || tokens[i].pos == "連体詞" || (is_verb == 0 && tokens[i].pos == "助動詞")){
+    if(tokens[i].pos == "記号" || tokens[i].pos == "感動詞" || tokens[i].pos == "連体詞" || (is_verb + is_adjective == 0 && tokens[i].pos == "助動詞")){
       // symbol, interjection, pre-noun adjectives, bound auxialary when not a verb
       tag = "skip";
     }
-    is_parenthesis_open = is_parenthesis_open || tokens[i].pos_detail_1 == "括弧開"; // opened parenthesis
+    is_parenthesis_open = is_parenthesis_open || (tokens[i].pos_detail_1 == "括弧開" && tokens[i].surface_form != "「"); // opened parenthesis
     is_parenthesis_close = tokens[i].pos_detail_1 == "括弧閉"; // closed parenthesis
     is_verb = isVerb(tokens[i]);
+    is_adjective = isAdjective(tokens[i]);
     if(is_parenthesis_close){
       is_parenthesis_open = false;
     }
@@ -73,14 +86,22 @@ export function editText(tokens, index, baseColor = "white"){
         is_verb = 2;
         continue;
       }
-      if(tokens[i].conjugated_form == "連用タ接続" && tokens[i + 1].basic_form == "て"){
+      if((tokens[i].conjugated_form == "連用タ接続" || tokens[i].conjugated_form == "連用形") && tokens[i + 1].basic_form == "て"){
+        // continuous use, continuous form
         continue;
       }
-      if(tokens[i + 1].pos == "助動詞" || tokens[i + 1].pos_detail_1 == "非自立" || tokens[i + 1].pos_detail_1 == "接尾"){
-        // bound auxialary, dependant verbs, suffix
+      if(tokens[i + 1].pos == "助動詞" || (tokens[i + 1].pos == "動詞" && tokens[i + 1].pos_detail_1 == "非自立") || tokens[i + 1].pos_detail_1 == "接尾"){
+        // bound auxialary, not indenpendants verbs, suffix
         continue;
       }
       is_verb = 0;
+    }
+    if(is_adjective != 0 && i != tokens.length - 1){
+      if(tokens[i + 1].pos == "助動詞"){
+        // bound auxialary
+        continue;
+      }
+      is_adjective = 0;
     }
     if(tag == "skip"){
       color = baseColor;
@@ -100,4 +121,12 @@ export function editBase(element){
   const tokens = _tokenizer.tokenize(element.textContent);
   element.innerHTML = editText(tokens, index);
   return
+}
+
+export function showBorder(element){
+  if(element.style.border == ""){
+    element.style.border = "1px solid red";
+  }else{
+    element.style.border = "";
+  }
 }
