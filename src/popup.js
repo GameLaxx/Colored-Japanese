@@ -1,4 +1,4 @@
-document.getElementById("save_btn").addEventListener("click", function () {
+document.getElementById("save_known_btn").addEventListener("click", function () {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     const activeTab = tabs[0];
     const activeTabId = activeTab.id;
@@ -25,7 +25,7 @@ document.getElementById("save_btn").addEventListener("click", function () {
   });
 });
 
-document.getElementById('load_btn').addEventListener('change', (event) => {
+document.getElementById('load_known_btn').addEventListener('change', (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -42,3 +42,47 @@ document.getElementById('load_btn').addEventListener('change', (event) => {
 
   reader.readAsText(file);
 });
+
+const submenus = document.querySelectorAll(".submenu");
+const subtools = document.querySelectorAll(".subtool");
+
+submenus.forEach(submenu => {
+  submenu.addEventListener("click", () => {
+    updateTarget(submenu);
+  });
+});
+
+function updateTarget(clickedElement) {
+  submenus.forEach(submenu => {
+    submenu.classList.toggle("target", submenu === clickedElement);
+  });
+}
+
+function localIdToHtmlId(id_str){
+  if(id_str == "userWords"){
+    return "known_tools"
+  }
+  return "known_tools"
+}
+
+function loadDictionary(id_str){
+  const pannel = document.getElementById(localIdToHtmlId(id_str));
+  const dictionary = pannel.getElementsByClassName("dictionary")[0];
+  chrome.storage.local.get(id_str, (result) => {
+    const wordList = result[id_str] || [];
+    for(let word of wordList){
+      const newWord = document.createElement("div");
+      newWord.classList.toggle("word");
+      const newText = document.createElement("p");
+      newWord.classList.toggle("word_string");
+      const newBtn = document.createElement("div");
+      newWord.classList.toggle("delete_word");
+      newText.textContent = word;
+      newWord.append(newText);
+      newWord.append(newBtn);
+      dictionary.append(newWord);
+    }
+  }); 
+}
+
+loadDictionary("userKnownWords");
