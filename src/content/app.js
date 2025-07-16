@@ -114,9 +114,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     setToLocal(wanted_words, "userWantedWords");
     return;
   }
-  if (message.type === "reload_words") {
+  if (message.type === "reload_known_words") {
     known_words.clear();
     loadFromLocal(known_words, "userKnownWords");
+    return;
+  }
+  if (message.type === "reload_learning_words") {
+    learning_words.clear();
+    loadFromLocal(learning_words, "userLearningWords");
+    return;
+  }
+  if (message.type === "reload_wanted_words") {
+    wanted_words.clear();
+    loadFromLocal(wanted_words, "userWantedWords");
     return;
   }
   if (message.type === "settings_update") {
@@ -160,7 +170,7 @@ function countLocal(){
 }
 function loadSettings(){
   chrome.storage.local.get("settings", (result) => {
-    const localSettings = result["settings"] || {"known_color" : false, "missing_color" : false, "particles_color" : false, "adverbs_skip" : false};
+    const localSettings = result["settings"] || {};
     for(let key in localSettings){
       settings[key] = localSettings[key];
     }

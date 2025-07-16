@@ -4,7 +4,10 @@ export let _tokenizer = null;
 export let learning_words = new Set();
 export let known_words = new Set();
 export let wanted_words = new Set();
-export let settings = {};
+export let settings = {
+  "known_color" : false, "learning_color" : true, "wanted_color" : true, "missing_color" : true, "particles_color" : false, 
+  "adverbs_skip" : false, "interjections_skip" : true, "symbols_skip" : true
+};
 
 kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTokenizer) => {
   if (err) throw err;
@@ -56,19 +59,19 @@ export function editText(tokens, index, baseColor = "white"){
       base = tokens[i].basic_form;
       if(tokens[i].pos == "助詞"){ // particle
         color = (settings["particles_color"]) ? "#42c8f5" : baseColor;
-      }else if(tokens[i].pos == "副詞"){ // adverbs
-        color = "#ff816e";
-      }else if(learning_words.has(base)){
-        color = "#faed75";
       }else if(known_words.has(base)){
         color = (settings["known_color"]) ? "#02d802" : baseColor;
+      }else if(learning_words.has(base)){
+        color = (settings["learning_color"]) ? "#faed75" : baseColor;
       }else if(wanted_words.has(base)){
-        color = "#a17100ff";
+        color = (settings["wanted_color"]) ? "#f442b8ff" : baseColor;
       }else{
-        color = baseColor;
+        color = (settings["missing_color"]) ? "#ff0000ff" : baseColor;
       }
     }
-    if(tokens[i].pos == "記号" || tokens[i].pos == "感動詞" || tokens[i].pos == "連体詞" || (is_verb + is_adjective == 0 && tokens[i].pos == "助動詞")){
+    if((settings["symbols_skip"] && tokens[i].pos == "記号") || (settings["interjections_skip"] && tokens[i].pos == "感動詞") 
+      || (settings["adverbs_skip"] && tokens[i].pos == "副詞")
+      || tokens[i].pos == "連体詞" || (is_verb + is_adjective == 0 && tokens[i].pos == "助動詞")){
       // symbol, interjection, pre-noun adjectives (might be too much), bound auxialary when not a verb
       tag = "skip";
     }

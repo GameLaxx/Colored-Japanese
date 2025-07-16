@@ -106,7 +106,7 @@ function updateLocalStorage(event){
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const activeTab = tabs[0];
       const activeTabId = activeTab.id;
-      chrome.tabs.sendMessage(activeTabId, { type: "reload_words" }, (res) => {
+      chrome.tabs.sendMessage(activeTabId, { type: `reload_${localIdToHtmlId(tag)}_words` }, (res) => {
         true;
       });
     });
@@ -153,7 +153,7 @@ function loadDictionary(id_str){
     }); 
   }else if(localIdToHtmlId(id_str) === "settings"){
     chrome.storage.local.get("settings", (result) => {
-      const localSettings = result["settings"] || {"known_color" : false, "missing_color" : false, "particles_color" : false, "adverbs_skip" : false};
+      const localSettings = result["settings"] || {};
       for(let key in localSettings){
         document.getElementById(key).checked = localSettings[key];
       }
