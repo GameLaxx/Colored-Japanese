@@ -11,7 +11,7 @@ function containsKanji(text) {
 }
 
 /**
- * Recursively edit the element, thus changing its child without deleting them.
+ * Recursively edit the element, thus changing its children without deleting them.
  *
  * @param {HTMLElement} element - The element to change.
  * @returns {void} Changes the element in place using the {@link editText} function.

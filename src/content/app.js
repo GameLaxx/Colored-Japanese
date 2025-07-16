@@ -12,6 +12,11 @@ loadFromLocal(wantedWords, "userWantedWords");
 loadFromLocal(skippedWords,  "userSkippedWords");
 loadSettings();
 
+/* 
+********************************************************************
+* Mouse move event
+******************************************************************** 
+*/ 
 function mouseMoveNetflix(elementsUnderMouse){
   for(let span of spanChildren){
     const matchedChild = Array.from(span.children).find(child =>
@@ -41,6 +46,11 @@ document.addEventListener('mousemove', (event) => {
   }
 });
 
+/* 
+********************************************************************
+* Click event
+******************************************************************** 
+*/ 
 document.addEventListener('click', (e) => {
   if(!keysPressed.has('alt')){
     return;
@@ -49,6 +59,11 @@ document.addEventListener('click', (e) => {
   editElementRecursively(clickedElement);
 }, true);
 
+/* 
+********************************************************************
+* Key press events
+******************************************************************** 
+*/ 
 document.addEventListener('keydown', (e) => {
   keysPressed.add(e.key.toLowerCase());
 
@@ -89,11 +104,15 @@ document.addEventListener('keydown', (e) => {
     countLocal();
   }
 });
-
 document.addEventListener('keyup', (e) => {
   keysPressed.delete(e.key.toLowerCase());
 });
 
+/* 
+********************************************************************
+* Message listener
+******************************************************************** 
+*/ 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("*-* Message received !", message.type);
   if (message.type === "require_known_words") {
@@ -155,6 +174,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
+/* 
+********************************************************************
+* Local words storage handling
+******************************************************************** 
+*/ 
 function loadFromLocal(targetSet, localId){
   chrome.storage.local.get(localId, (result) => {
     const wordList = result[localId] || [];
@@ -192,6 +216,12 @@ function countLocal(){
     console.log("*-* In client PC : ", skippedWords.size);
   });
 }
+
+/* 
+********************************************************************
+* Local settings storage handling
+******************************************************************** 
+*/ 
 function loadSettings(){
   chrome.storage.local.get("settings", (result) => {
     const localSettings = result["settings"] || {};
@@ -206,6 +236,11 @@ function setSettings(){
   });
 }
 
+/* 
+********************************************************************
+* Loading word from a given text
+******************************************************************** 
+*/ 
 function loadWordText(text, targetSet){
   const words = text.split('\n');
   for(let word of words){
@@ -214,6 +249,11 @@ function loadWordText(text, targetSet){
   reloadColor();
 }
 
+/* 
+********************************************************************
+* Update colored ruby tags
+******************************************************************** 
+*/ 
 function reloadColor(){
   if(navType){ // netflix automaticaly update the subs
     return;
@@ -234,6 +274,7 @@ function reloadColor(){
   }
 }
 
+// launch the MutationObserver if on netflix
 if (navType) {
   tryObserve();
 }

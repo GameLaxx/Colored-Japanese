@@ -4,12 +4,10 @@ export let spanChildren = [];
 
 function observeNetflixElement(selector, callback) {
   const targetNode = document.querySelector(selector);
-
   if (!targetNode) {
-    console.log("Élément non trouvé :", selector);
+    console.log("*-* Element not found..", selector);
     return;
   }
-
   const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" || mutation.type === "characterData") {
@@ -17,14 +15,13 @@ function observeNetflixElement(selector, callback) {
       }
     }
   });
-
   observer.observe(targetNode, {
     childList: true,
     characterData: true,
     subtree: true,
   });
 
-  console.log("Observation lancée sur :", selector);
+  console.log("*-* Watching mutation for :", selector);
 }
 
 export const tryObserve = () => {
@@ -33,6 +30,10 @@ export const tryObserve = () => {
   if (target) {
     console.log("*-* Found the subs !")
     observeNetflixElement(selector, (mutation) => {
+      // the netflix subtitles are constantly destroyed then added again
+      // the closest parent that does not is a div with the class player-timedtext
+      // from this parent, we should get a first div than a span that contains all the subs currently shown
+      // each sub is in its own span
       const subdiv = mutation.target.querySelector(".player-timedtext-text-container");
       if(!subdiv){
         return;
@@ -50,10 +51,9 @@ export const tryObserve = () => {
           continue;
         }
         editBase(spanChildren[i], i);
-        // console.log("Changement détecté :", spanChildren[i].textContent);
       }
     });
   } else {
-    setTimeout(tryObserve, 1000);
+    setTimeout(tryObserve, 1000); // as long as the parent div is not found, keep trying to find it later
   }
 };

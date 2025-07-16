@@ -214,7 +214,7 @@ export function editText(tokens, index, baseColor = "white"){
 }
 
 /**
- * Basic function that changes the innerHtml of an element without watching for child
+ * Basic function that changes the innerHtml of an element without watching for children
  *
  * @param {HTMLElement} element - The HTML element.
  * @param {number} index - Only used for netflix (might be deleted later) to add <br> at the start of the result.
