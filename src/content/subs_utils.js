@@ -2,7 +2,7 @@ import { editBase } from "./tokenizer";
 
 export let spanChildren = [];
 
-function observeNetflixElement(selector, callback) {
+function observeElement(selector, callback) {
   const targetNode = document.querySelector(selector);
   if (!targetNode) {
     console.log("*-* Element not found..", selector);
@@ -12,6 +12,8 @@ function observeNetflixElement(selector, callback) {
     for (const mutation of mutationsList) {
       if (mutation.type === "childList" || mutation.type === "characterData") {
         callback(mutation);
+      }else{
+        console.log(mutation);
       }
     }
   });
@@ -21,15 +23,15 @@ function observeNetflixElement(selector, callback) {
     subtree: true,
   });
 
-  console.log("*-* Watching mutation for :", selector);
+  console.log("*-* Watching mutation for :", targetNode);
 }
 
-export const tryObserve = () => {
+export const tryObserveNetflix = () => {
   const selector = ".player-timedtext";
   const target = document.querySelector(selector);
   if (target) {
-    console.log("*-* Found the subs !")
-    observeNetflixElement(selector, (mutation) => {
+    console.log("*-* Found the netflix subs !")
+    observeElement(selector, (mutation) => {
       // the netflix subtitles are constantly destroyed then added again
       // the closest parent that does not is a div with the class player-timedtext
       // from this parent, we should get a first div than a span that contains all the subs currently shown
@@ -54,6 +56,25 @@ export const tryObserve = () => {
       }
     });
   } else {
-    setTimeout(tryObserve, 1000); // as long as the parent div is not found, keep trying to find it later
+    setTimeout(tryObserveNetflix, 1000); // as long as the parent div is not found, keep trying to find it later
+  }
+};
+
+export const tryObserveYoutube = () => {
+  const selector = ".ytp-caption-window-container";
+  const target = document.querySelector(selector);
+  if (target) {
+    console.log("*-* Found the youtube subs !")
+    observeElement(selector, (mutation) => {
+      spanChildren = mutation.target.querySelectorAll(".ytp-caption-segment");
+      if(spanChildren.length == 0){
+        return
+      }
+      for(let i = 0; i < spanChildren.length; i++){
+        editBase(spanChildren[i], i);
+      }
+    });
+  } else {
+    setTimeout(tryObserveYoutube, 1000); // as long as the parent div is not found, keep trying to find it later
   }
 };

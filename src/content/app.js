@@ -1,10 +1,11 @@
 import { learningWords, knownWords, wantedWords, skippedWords, settings, _tokenizer, showBorder, whatColor, isSkipped } from './tokenizer';
-import { spanChildren, tryObserve } from './subs_utils';
+import { spanChildren, tryObserveNetflix, tryObserveYoutube } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
 let child_over = null;
 let keysPressed = new Set();
-const navType = window.location.hostname.includes("netflix."); // true means on netflix, false else
+const netflixFlag = window.location.hostname.includes("netflix."); // true means on netflix, false else
+const youtubeFlag = window.location.hostname.includes("youtube."); // true means on youtube, false else
 
 loadFromLocal(knownWords, "userKnownWords");
 loadFromLocal(learningWords, "userLearningWords");
@@ -39,7 +40,7 @@ document.addEventListener('mousemove', (event) => {
   if(elementsUnderMouse.length === 0){
     return;
   }
-  if(navType){
+  if(netflixFlag){
     mouseMoveNetflix(elementsUnderMouse);
   }else{
     mouseMoveDefault(elementsUnderMouse);
@@ -255,7 +256,7 @@ function loadWordText(text, targetSet){
 ******************************************************************** 
 */ 
 function reloadColor(){
-  if(navType){ // netflix automaticaly update the subs
+  if(netflixFlag){ // netflix automaticaly update the subs
     return;
   }
   const elementsWithEmptyTag = Array.from(document.querySelectorAll('ruby[data-tag]'));
@@ -275,6 +276,8 @@ function reloadColor(){
 }
 
 // launch the MutationObserver if on netflix
-if (navType) {
-  tryObserve();
+if (netflixFlag) {
+  tryObserveNetflix();
+}else if(youtubeFlag){
+  tryObserveYoutube();
 }
