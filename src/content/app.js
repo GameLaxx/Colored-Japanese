@@ -234,7 +234,7 @@ function reloadColor(){
     const pos = element.dataset.pos;
     const base = element.dataset.base;
     const baseColor = element.dataset.bc;
-    const skip = isSkipped(pos);
+    const skip = isSkipped(pos, base);
     element.setAttribute("tag", skip);
     if(skip == ""){
       element.setAttribute("style", `color : ${whatColor(pos, base, baseColor)}`);

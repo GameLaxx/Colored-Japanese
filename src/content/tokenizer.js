@@ -18,10 +18,10 @@ kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTo
 
 function isVerb(token){
   if(token.pos == "動詞" || token.pos == "助動詞"){
-    // verb, auxiliary verb
+    // verb, bound auxiliary verb
     return 2;
   }else if(token.pos_detail_1 == "サ変接続" || token.basic_form == "て"){
-    // irregular conjugation with suru, te is a particul not a verb
+    // irregular conjugation with suru, te is a particul not a verb but can be a suffix for a verb
     return 1;
   }else{
     return 0;
@@ -30,7 +30,7 @@ function isVerb(token){
 
 function isAdjective(token){
   if(token.pos == "形容詞"){
-    // ajdective
+    // adjective
     return 2;
   }else{
     return 0;
@@ -78,12 +78,16 @@ export function editText(tokens, index, baseColor = "white"){
       continue;
     }
     tmp += tokens[i].surface_form;
+    if(tokens[i].pos == "接頭詞"){
+      // prefix
+      continue;
+    }
     if(is_verb == 0 && is_adjective == 0 && is_parenthesis_open == false && is_parenthesis_close == false){ // start of a new case
       base = tokens[i].basic_form;
       pos = tokens[i].pos;
       color = whatColor(pos, base, baseColor)
     }
-    tag = isSkipped(pos);
+    tag = isSkipped(pos, base);
     is_parenthesis_open = is_parenthesis_open || (tokens[i].pos_detail_1 == "括弧開" && tokens[i].surface_form != "「"); // opened parenthesis
     is_parenthesis_close = tokens[i].pos_detail_1 == "括弧閉"; // closed parenthesis
     is_verb = isVerb(tokens[i]);
