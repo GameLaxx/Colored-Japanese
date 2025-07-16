@@ -4,7 +4,7 @@ function getWordList(messageId, fileOuput){
     const activeTabId = activeTab.id;
     chrome.tabs.sendMessage(activeTabId, { type: messageId }, (response) => {
       if (chrome.runtime.lastError) {
-        console.error("Error sending message to content script:", chrome.runtime.lastError);
+        alert("Error sending message to content script:" + JSON.stringify(chrome.runtime.lastError));
         return;
       }
       if (response && response.text) {
@@ -16,7 +16,7 @@ function getWordList(messageId, fileOuput){
           saveAs: true
         });
       } else {
-        console.error("No response or text received from content script.");
+        alert("No response or text received from content script.");
       }
     });
   });
@@ -114,14 +114,17 @@ function localIdToHtmlId(id_str){
   if(id_str == "userWantedWords"){
     return "wanted"
   }
-  return "skipped"
+  if(id_str == "userSkippedWords"){
+    return "skipped"
+  }
+  return "settings"
 }
 
 function loadDictionary(id_str){
   const pannel = document.getElementById(localIdToHtmlId(id_str) + "_tools");
   updateTarget(pannel, subtools, "show");
   const dictionary = pannel.getElementsByClassName("dictionary")[0];
-  if(dictionary.dataset.tag == undefined){
+  if(dictionary && dictionary.dataset.tag == undefined){
     dictionary.dataset.tag = id_str;
     chrome.storage.local.get(id_str, (result) => {
       const wordList = result[id_str] || [];
