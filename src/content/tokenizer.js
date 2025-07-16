@@ -4,6 +4,7 @@ export let _tokenizer = null;
 export let learning_words = new Set();
 export let known_words = new Set();
 export let wanted_words = new Set();
+export let settings = {};
 
 kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTokenizer) => {
   if (err) throw err;
@@ -54,13 +55,13 @@ export function editText(tokens, index, baseColor = "white"){
     if(is_verb == 0 && is_adjective == 0 && is_parenthesis_open == false && is_parenthesis_close == false){ // start of a new case
       base = tokens[i].basic_form;
       if(tokens[i].pos == "助詞"){ // particle
-        color = "#42c8f5";
+        color = (settings["particles_color"]) ? "#42c8f5" : baseColor;
       }else if(tokens[i].pos == "副詞"){ // adverbs
         color = "#ff816e";
       }else if(learning_words.has(base)){
         color = "#faed75";
       }else if(known_words.has(base)){
-        color = "#02d802";
+        color = (settings["known_color"]) ? "#02d802" : baseColor;
       }else if(wanted_words.has(base)){
         color = "#a17100ff";
       }else{

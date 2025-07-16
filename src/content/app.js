@@ -1,4 +1,4 @@
-import { learning_words, known_words, wanted_words, _tokenizer, showBorder } from './tokenizer';
+import { learning_words, known_words, wanted_words, settings, _tokenizer, showBorder } from './tokenizer';
 import { spanChildren, tryObserve } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
@@ -9,6 +9,7 @@ const navType = window.location.hostname.includes("netflix."); // true means on 
 loadWordList(known_words, '/known.txt', "userKnownWords");
 loadWordList(learning_words, '/learning.txt', "userLearningWords");
 loadWordList(wanted_words, '', "userWantedWords");
+loadSettings();
 
 function mouseMoveNetflix(elementsUnderMouse){
   for(let span of spanChildren){
@@ -101,18 +102,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "send_known_words") {
     loadWordText(message.text, known_words);
     setToLocal(known_words, "userKnownWords");
+    return;
   }
   if (message.type === "send_learning_words") {
     loadWordText(message.text, learning_words);
     setToLocal(learning_words, "userLearningWords");
+    return;
   }
   if (message.type === "send_wanted_words") {
     loadWordText(message.text, wanted_words);
     setToLocal(wanted_words, "userWantedWords");
+    return;
   }
   if (message.type === "reload_words") {
     known_words.clear();
     loadFromLocal(known_words, "userKnownWords");
+    return;
+  }
+  if (message.type === "settings_update") {
+    settings[message.key] = message.value;
+    setSettings();
+    return;
   }
   return true;
 });
@@ -131,7 +141,6 @@ function setToLocal(targetSet, localId){
   chrome.storage.local.set({ [localId] : Array.from(targetSet) }, () => {
   });
 }
-
 function countLocal(){
   chrome.storage.local.get("userKnownWords", (result) => {
     const wordList = result["userKnownWords"] || [];
@@ -147,6 +156,19 @@ function countLocal(){
     const wordList = result["userWantedWords"] || [];
     console.log("*-* In local storage wanted : ", wordList.length);
     console.log("*-* In client PC : ", wanted_words.size);
+  });
+}
+function loadSettings(){
+  chrome.storage.local.get("settings", (result) => {
+    const localSettings = result["settings"] || {"known_color" : false, "missing_color" : false, "particles_color" : false, "adverbs_skip" : false};
+    for(let key in localSettings){
+      settings[key] = localSettings[key];
+    }
+    console.log(`*-* Settings localy loaded`);
+  });
+}
+function setSettings(){
+  chrome.storage.local.set({ "settings" : settings }, () => {
   });
 }
 

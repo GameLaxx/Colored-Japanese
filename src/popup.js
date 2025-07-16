@@ -59,6 +59,15 @@ document.getElementById('load_wanted_btn').addEventListener('change', (event) =>
 
 const submenus = document.querySelectorAll(".submenu");
 const subtools = document.querySelectorAll(".subtool");
+document.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+  checkbox.addEventListener('change', (event) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      const activeTab = tabs[0];
+      const activeTabId = activeTab.id;
+      chrome.tabs.sendMessage(activeTabId, { type: "settings_update", key : event.target.id, value : event.target.checked });
+    });
+  });
+});
 
 function capitalize(str) {
   if (!str) return "";
@@ -142,6 +151,13 @@ function loadDictionary(id_str){
         dictionary.append(newWord);
       }
     }); 
+  }else if(localIdToHtmlId(id_str) === "settings"){
+    chrome.storage.local.get("settings", (result) => {
+      const localSettings = result["settings"] || {"known_color" : false, "missing_color" : false, "particles_color" : false, "adverbs_skip" : false};
+      for(let key in localSettings){
+        document.getElementById(key).checked = localSettings[key];
+      }
+    });
   }
 }
 
