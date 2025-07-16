@@ -56,6 +56,7 @@ document.addEventListener('keydown', (e) => {
       console.log("Saving in known", child_over.dataset.base);
       known_words.add(child_over.dataset.base);
       setToLocal(known_words, "userKnownWords");
+      reloadColor();
     }
     return;
   }
@@ -64,6 +65,7 @@ document.addEventListener('keydown', (e) => {
       console.log("Saving in wanted", child_over.dataset.base);
       wanted_words.add(child_over.dataset.base);
       setToLocal(wanted_words, "userWantedWords");
+      reloadColor();
     }
     return;
   }
@@ -102,37 +104,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "send_known_words") {
     loadWordText(message.text, known_words);
     setToLocal(known_words, "userKnownWords");
-    reloadColor();
     return;
   }
   if (message.type === "send_learning_words") {
     loadWordText(message.text, learning_words);
     setToLocal(learning_words, "userLearningWords");
-    reloadColor();
     return;
   }
   if (message.type === "send_wanted_words") {
     loadWordText(message.text, wanted_words);
     setToLocal(wanted_words, "userWantedWords");
-    reloadColor();
     return;
   }
   if (message.type === "reload_known_words") {
     known_words.clear();
     loadFromLocal(known_words, "userKnownWords");
-    reloadColor();
     return;
   }
   if (message.type === "reload_learning_words") {
     learning_words.clear();
     loadFromLocal(learning_words, "userLearningWords");
-    reloadColor();
     return;
   }
   if (message.type === "reload_wanted_words") {
     wanted_words.clear();
     loadFromLocal(wanted_words, "userWantedWords");
-    reloadColor();
     return;
   }
   if (message.type === "settings_update") {
@@ -150,6 +146,7 @@ function loadFromLocal(targetSet, localId){
     for(let word of wordList){
       targetSet.add(word);
     }
+    reloadColor();
     console.log(`*-* ${targetSet.size} words localy loaded`);
   });
 }
@@ -194,6 +191,7 @@ async function loadWordText(text, targetSet){
   for(let word of words){
     targetSet.add(word);
   }
+  reloadColor();
 }
 
 async function loadWordList(targetSet, urlFile, localId) {
