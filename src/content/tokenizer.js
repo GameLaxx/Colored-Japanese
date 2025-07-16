@@ -7,7 +7,7 @@ export let wanted_words = new Set();
 export let skipped_words = new Set();
 export let settings = {
   "known_color" : false, "learning_color" : true, "wanted_color" : true, "missing_color" : true, "particles_color" : false, 
-  "adverbs_skip" : false, "interjections_skip" : true, "symbols_skip" : true
+  "adverbs_skip" : false, "interjections_skip" : true, "symbols_skip" : true, "numbers_skip" : false, "katakanas_skip" : false
 };
 
 kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTokenizer) => {
@@ -15,6 +15,10 @@ kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTo
   _tokenizer = builtTokenizer;
   console.log("*-* Color subs loaded !")
 });
+
+function isKatakana(str) {
+  return /^[\u30A0-\u30FF]+$/.test(str);
+}
 
 function isVerb(token){
   if(token.pos == "動詞" || token.pos == "助動詞"){
@@ -41,8 +45,12 @@ export function isSkipped(pos, base){
   if(skipped_words.has(base)){
     return "skip";
   }
+  if(base == "*"){
+    return "skip" // not japanese caracter
+  }
   if((settings["symbols_skip"] && pos == "記号") || (settings["interjections_skip"] && pos == "感動詞") 
-    || (settings["adverbs_skip"] && pos == "副詞")){
+    || (settings["adverbs_skip"] && pos == "副詞") || (settings["numbers_skip"] && pos == "数")
+    || (settings["katakanas_skip"] && isKatakana(base))){
     // symbol, interjection, adverbs
     return "skip";
   }
@@ -68,7 +76,7 @@ export function editText(tokens, index, baseColor = "white"){
   let tmp = "";
   let is_parenthesis_open = false;
   let is_parenthesis_close = false;
-  let is_verb = 0; // 0 is not, 1 is maybe (sahen), 2 is yes
+  let is_verb = 0; // 0 is not, 1 is maybe (sahen or tari form), 2 is yes
   let is_adjective = 0; // 0 is not, 2 is yes
   let tag = "";
   let color = "";
@@ -84,10 +92,10 @@ export function editText(tokens, index, baseColor = "white"){
     }
     if(is_verb == 0 && is_adjective == 0 && is_parenthesis_open == false && is_parenthesis_close == false){ // start of a new case
       base = tokens[i].basic_form;
-      pos = tokens[i].pos;
-      color = whatColor(pos, base, baseColor)
+      pos = (tokens[i].pos_detail_1 == "数") ? tokens[i].pos_detail_1 : tokens[i].pos;
+      color = whatColor(pos, base, baseColor);
+      tag = isSkipped(pos, base);
     }
-    tag = isSkipped(pos, base);
     is_parenthesis_open = is_parenthesis_open || (tokens[i].pos_detail_1 == "括弧開" && tokens[i].surface_form != "「"); // opened parenthesis
     is_parenthesis_close = tokens[i].pos_detail_1 == "括弧閉"; // closed parenthesis
     is_verb = isVerb(tokens[i]);
@@ -99,24 +107,31 @@ export function editText(tokens, index, baseColor = "white"){
       tag = "skip";
       continue;
     }
-    if(is_verb != 0 && i != tokens.length - 1){
-      if(is_verb == 1 && tokens[i + 1].basic_form == "する"){
+    if(is_verb == 1  && i != tokens.length - 1){
+      if(tokens[i + 1].basic_form == "する"){
+        // temporary verb and next token is suru
         is_verb = 2;
         continue;
       }
+    }
+    if(is_verb == 2 && i != tokens.length - 1){
       if((tokens[i].conjugated_form == "連用タ接続" || tokens[i].conjugated_form == "連用形") && tokens[i + 1].basic_form == "て"){
         // continuous use, continuous form
         continue;
       }
-      if(tokens[i + 1].pos == "助動詞" || (tokens[i + 1].pos == "動詞" && tokens[i + 1].pos_detail_1 == "非自立") || tokens[i + 1].pos_detail_1 == "接尾"){
+      if((tokens[i + 1].pos == "助動詞" && tokens[i + 1].basic_form != "です") || (tokens[i + 1].pos == "動詞" && tokens[i + 1].pos_detail_1 == "非自立") || tokens[i + 1].pos_detail_1 == "接尾"){
         // bound auxialary, not indenpendants verbs, suffix
+        continue;
+      }
+      if(tokens[i + 1].pos_detail_1 == "並立助詞"){
+        is_verb = 1;
         continue;
       }
       is_verb = 0;
     }
     if(is_adjective != 0 && i != tokens.length - 1){
-      if(tokens[i + 1].pos == "助動詞"){
-        // bound auxialary
+      if(tokens[i + 1].pos == "助動詞" && tokens[i + 1].basic_form != "です"){
+        // bound auxialary other than desu
         continue;
       }
       is_adjective = 0;
