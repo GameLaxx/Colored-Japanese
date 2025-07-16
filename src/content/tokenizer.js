@@ -4,6 +4,7 @@ export let _tokenizer = null;
 export let learning_words = new Set();
 export let known_words = new Set();
 export let wanted_words = new Set();
+export let skipped_words = new Set();
 export let settings = {
   "known_color" : false, "learning_color" : true, "wanted_color" : true, "missing_color" : true, "particles_color" : false, 
   "adverbs_skip" : false, "interjections_skip" : true, "symbols_skip" : true
@@ -36,7 +37,10 @@ function isAdjective(token){
   }
 }
 
-export function isSkipped(pos){
+export function isSkipped(pos, base){
+  if(skipped_words.has(base)){
+    return "skip";
+  }
   if((settings["symbols_skip"] && pos == "記号") || (settings["interjections_skip"] && pos == "感動詞") 
     || (settings["adverbs_skip"] && pos == "副詞")){
     // symbol, interjection, adverbs
@@ -120,6 +124,7 @@ export function editText(tokens, index, baseColor = "white"){
     tmp = "";
     base = "";
     tag = "";
+    pos = "";
     is_verb = 0;
     is_adjective = 0;
     is_parenthesis_close = false;

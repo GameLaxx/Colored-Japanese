@@ -1,4 +1,4 @@
-import { learning_words, known_words, wanted_words, settings, _tokenizer, showBorder, whatColor, isSkipped } from './tokenizer';
+import { learning_words, known_words, wanted_words, skipped_words, settings, _tokenizer, showBorder, whatColor, isSkipped } from './tokenizer';
 import { spanChildren, tryObserve } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
@@ -9,6 +9,7 @@ const navType = window.location.hostname.includes("netflix."); // true means on 
 loadWordList(known_words, '/known.txt', "userKnownWords");
 loadWordList(learning_words, '/learning.txt', "userLearningWords");
 loadWordList(wanted_words, '', "userWantedWords");
+loadWordList(skipped_words, '/skipped.txt', "userSkippedWords");
 loadSettings();
 
 function mouseMoveNetflix(elementsUnderMouse){
@@ -65,6 +66,15 @@ document.addEventListener('keydown', (e) => {
       console.log("Saving in wanted", child_over.dataset.base);
       wanted_words.add(child_over.dataset.base);
       setToLocal(wanted_words, "userWantedWords");
+      reloadColor();
+    }
+    return;
+  }
+  if (keysPressed.has('alt') && keysPressed.has('s')) {
+    if(child_over != undefined && child_over.dataset.tag == "") {
+      console.log("Saving in skipped", child_over.dataset.base);
+      skipped_words.add(child_over.dataset.base);
+      setToLocal(skipped_words, "userSkippedWords");
       reloadColor();
     }
     return;
@@ -131,6 +141,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     loadFromLocal(wanted_words, "userWantedWords");
     return;
   }
+  if (message.type === "reload_skipped_words") {
+    skipped_words.clear();
+    loadFromLocal(skipped_words, "userSkippedWords");
+    return;
+  }
   if (message.type === "settings_update") {
     settings[message.key] = message.value;
     setSettings();
@@ -170,6 +185,11 @@ function countLocal(){
     const wordList = result["userWantedWords"] || [];
     console.log("*-* In local storage wanted : ", wordList.length);
     console.log("*-* In client PC : ", wanted_words.size);
+  });
+  chrome.storage.local.get("userSkippedWords", (result) => {
+    const wordList = result["userSkippedWords"] || [];
+    console.log("*-* In local storage skipped : ", wordList.length);
+    console.log("*-* In client PC : ", skipped_words.size);
   });
 }
 function loadSettings(){
