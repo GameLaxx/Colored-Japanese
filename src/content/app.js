@@ -6,10 +6,10 @@ let child_over = null;
 let keysPressed = new Set();
 const navType = window.location.hostname.includes("netflix."); // true means on netflix, false else
 
-loadWordList(known_words, '/known.txt', "userKnownWords");
-loadWordList(learning_words, '/learning.txt', "userLearningWords");
-loadWordList(wanted_words, '', "userWantedWords");
-loadWordList(skipped_words, '/skipped.txt', "userSkippedWords");
+loadFromLocal(known_words, "userKnownWords");
+loadFromLocal(learning_words, "userLearningWords");
+loadFromLocal(wanted_words, "userWantedWords");
+loadFromLocal(skipped_words,  "userSkippedWords");
 loadSettings();
 
 function mouseMoveNetflix(elementsUnderMouse){
@@ -206,23 +206,12 @@ function setSettings(){
   });
 }
 
-async function loadWordText(text, targetSet){
+function loadWordText(text, targetSet){
   const words = text.split('\n');
   for(let word of words){
     targetSet.add(word);
   }
   reloadColor();
-}
-
-async function loadWordList(targetSet, urlFile, localId) {
-  if(urlFile.length != 0){
-    const url_ext = chrome.runtime.getURL(urlFile);
-    const response = await fetch(url_ext);
-    const text = await response.text();
-    loadWordText(text, targetSet)
-    console.log(`*-* ${targetSet.size} words loaded`);
-  }
-  loadFromLocal(targetSet, localId);
 }
 
 function reloadColor(){

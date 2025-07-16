@@ -39,7 +39,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["dict/**", "learning.txt", "known.txt", "skipped.txt"],
+      "resources": ["dict/**"],
       "matches": ["<all_urls>"]
     }
   ]
