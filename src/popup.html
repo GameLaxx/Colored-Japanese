@@ -7,6 +7,7 @@
   <body>
     <button id="save_known_btn" class="save_btn"> 📖 SAVE KNOWN WORDS</button>
     <button id="save_learn_btn" class="save_btn">🔎 SAVE LEARNING WORDS</button>
+    <button id="save_wanted_btn" class="save_btn">🙏 SAVE WANTED WORDS</button>
     <div class="content">
       <div class="menu">
         <div id="known" class="submenu target">
@@ -14,6 +15,9 @@
         </div>
         <div id="learning" class="submenu">
           Learning words
+        </div>
+        <div id="wanted" class="submenu">
+          Wanted words
         </div>
         <div id="skipped" class="submenu">
           Skipped words
@@ -35,7 +39,26 @@
           </div>
         </div>
         <div id="learning_tools" class="subtool">
-          <input type="file" id="load_learning_btn" accept=".txt"/>
+          <div class="slot">
+            <label class="file-upload">
+              <input type="file" id="load_learning_btn" accept=".txt"/>
+              Load words from a file
+            </label>
+          </div>
+          <div class="dictionary">
+            Your current learning words
+          </div>
+        </div>
+        <div id="wanted_tools" class="subtool">
+          <div class="slot">
+            <label class="file-upload">
+              <input type="file" id="load_wanted_btn" accept=".txt"/>
+              Load words from a file
+            </label>
+          </div>
+          <div class="dictionary">
+            Your current wanted words
+          </div>
         </div>
         <div id="skipped_tools" class="subtool">
 

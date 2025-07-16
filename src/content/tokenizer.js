@@ -1,10 +1,9 @@
 import kuromoji from 'kuromoji'
 
-export const navType = window.location.hostname.includes("netflix."); // true means on netflix, false else
-
 export let _tokenizer = null;
 export let learning_words = new Set();
 export let known_words = new Set();
+export let wanted_words = new Set();
 
 kuromoji.builder({ dicPath: chrome.runtime.getURL('dict') }).build((err, builtTokenizer) => {
   if (err) throw err;
@@ -62,12 +61,14 @@ export function editText(tokens, index, baseColor = "white"){
         color = "#faed75";
       }else if(known_words.has(base)){
         color = "#02d802";
+      }else if(wanted_words.has(base)){
+        color = "#a17100ff";
       }else{
         color = baseColor;
       }
     }
     if(tokens[i].pos == "記号" || tokens[i].pos == "感動詞" || tokens[i].pos == "連体詞" || (is_verb + is_adjective == 0 && tokens[i].pos == "助動詞")){
-      // symbol, interjection, pre-noun adjectives, bound auxialary when not a verb
+      // symbol, interjection, pre-noun adjectives (might be too much), bound auxialary when not a verb
       tag = "skip";
     }
     is_parenthesis_open = is_parenthesis_open || (tokens[i].pos_detail_1 == "括弧開" && tokens[i].surface_form != "「"); // opened parenthesis
@@ -111,6 +112,7 @@ export function editText(tokens, index, baseColor = "white"){
     base = "";
     tag = "";
     is_verb = 0;
+    is_adjective = 0;
     is_parenthesis_close = false;
     is_parenthesis_open = false;
   }

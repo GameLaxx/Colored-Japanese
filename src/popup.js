@@ -1,60 +1,80 @@
-document.getElementById("save_known_btn").addEventListener("click", function () {
+function getWordList(messageId, fileOuput){
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     const activeTab = tabs[0];
     const activeTabId = activeTab.id;
-    chrome.tabs.sendMessage(activeTabId, { type: "require_words" }, (response) => {
-
+    chrome.tabs.sendMessage(activeTabId, { type: messageId }, (response) => {
       if (chrome.runtime.lastError) {
         console.error("Error sending message to content script:", chrome.runtime.lastError);
         return;
       }
-
       if (response && response.text) {
         const blob = new Blob([response.text], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         chrome.downloads.download({
           url: url,
-          filename: "known.txt",
+          filename: fileOuput,
           saveAs: true
         });
       } else {
         console.error("No response or text received from content script.");
       }
-
     });
   });
+}
+
+document.getElementById("save_known_btn").addEventListener("click", function () {
+  getWordList("require_known_words", "known.txt")
+});
+document.getElementById("save_learn_btn").addEventListener("click", function () {
+  getWordList("require_learn_words", "learn.txt")
+});
+document.getElementById("save_wanted_btn").addEventListener("click", function () {
+  getWordList("require_wanted_words", "wanted.txt")
 });
 
-document.getElementById('load_known_btn').addEventListener('change', (event) => {
+function setWordList(messageId, event){
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
-
   reader.onload = function () {
     const content = reader.result;  
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const activeTab = tabs[0];
       const activeTabId = activeTab.id;
-      chrome.tabs.sendMessage(activeTabId, { type: "send_words", text : content });
+      chrome.tabs.sendMessage(activeTabId, { type: messageId, text : content });
     });
   };
-
   reader.readAsText(file);
+}
+
+document.getElementById('load_known_btn').addEventListener('change', (event) => {
+  setWordList("send_known_words", event);
+});
+document.getElementById('load_learning_btn').addEventListener('change', (event) => {
+  setWordList("send_learning_words", event);
+});
+document.getElementById('load_wanted_btn').addEventListener('change', (event) => {
+  setWordList("send_wanted_words", event);
 });
 
 const submenus = document.querySelectorAll(".submenu");
 const subtools = document.querySelectorAll(".subtool");
 
+function capitalize(str) {
+  if (!str) return "";
+  return str[0].toUpperCase() + str.slice(1).toLowerCase();
+}
+
 submenus.forEach(submenu => {
   submenu.addEventListener("click", () => {
-    updateTarget(submenu);
+    updateTarget(submenu, submenus, "target");
+    loadDictionary(`user${capitalize(submenu.id)}Words`)
   });
 });
 
-function updateTarget(clickedElement) {
-  submenus.forEach(submenu => {
-    submenu.classList.toggle("target", submenu === clickedElement);
+function updateTarget(clickedElement, otherElementList, className) {
+  otherElementList.forEach(other => {
+    other.classList.toggle(className, other === clickedElement);
   });
 }
 
@@ -85,32 +105,41 @@ function updateLocalStorage(event){
 }
 
 function localIdToHtmlId(id_str){
-  if(id_str == "userWords"){
-    return "known_tools"
+  if(id_str == "userKnownWords"){
+    return "known"
   }
-  return "known_tools"
+  if(id_str == "userLearningWords"){
+    return "learning"
+  }
+  if(id_str == "userWantedWords"){
+    return "wanted"
+  }
+  return "skipped"
 }
 
 function loadDictionary(id_str){
-  const pannel = document.getElementById(localIdToHtmlId(id_str));
+  const pannel = document.getElementById(localIdToHtmlId(id_str) + "_tools");
+  updateTarget(pannel, subtools, "show");
   const dictionary = pannel.getElementsByClassName("dictionary")[0];
-  dictionary.dataset.tag = id_str;
-  chrome.storage.local.get(id_str, (result) => {
-    const wordList = result[id_str] || [];
-    for(let word of wordList){
-      const newWord = document.createElement("div");
-      newWord.classList.toggle("word");
-      const newText = document.createElement("p");
-      newText.classList.toggle("word_string");
-      const newBtn = document.createElement("div");
-      newBtn.classList.toggle("delete_word");
-      newBtn.addEventListener("click", (event) => updateLocalStorage(event));
-      newText.textContent = word;
-      newWord.append(newText);
-      newWord.append(newBtn);
-      dictionary.append(newWord);
-    }
-  }); 
+  if(dictionary.dataset.tag == undefined){
+    dictionary.dataset.tag = id_str;
+    chrome.storage.local.get(id_str, (result) => {
+      const wordList = result[id_str] || [];
+      for(let word of wordList){
+        const newWord = document.createElement("div");
+        newWord.classList.toggle("word");
+        const newText = document.createElement("p");
+        newText.classList.toggle("word_string");
+        const newBtn = document.createElement("div");
+        newBtn.classList.toggle("delete_word");
+        newBtn.addEventListener("click", (event) => updateLocalStorage(event));
+        newText.textContent = word;
+        newWord.append(newText);
+        newWord.append(newBtn);
+        dictionary.append(newWord);
+      }
+    }); 
+  }
 }
 
 loadDictionary("userKnownWords");

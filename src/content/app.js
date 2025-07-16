@@ -1,12 +1,14 @@
-import { learning_words, known_words, _tokenizer, navType, showBorder } from './tokenizer';
+import { learning_words, known_words, wanted_words, _tokenizer, showBorder } from './tokenizer';
 import { spanChildren, tryObserve } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
 let child_over = null;
 let keysPressed = new Set();
+const navType = window.location.hostname.includes("netflix."); // true means on netflix, false else
 
-loadWordList("known", '/known.txt');
-loadWordList("learning", '/learning.txt');
+loadWordList(known_words, '/known.txt', "userKnownWords");
+loadWordList(learning_words, '/learning.txt', "userLearningWords");
+loadWordList(wanted_words, '', "userWantedWords");
 
 function mouseMoveNetflix(elementsUnderMouse){
   for(let span of spanChildren){
@@ -50,9 +52,17 @@ document.addEventListener('keydown', (e) => {
 
   if (keysPressed.has('alt') && keysPressed.has('a')) {
     if(child_over != undefined && child_over.dataset.tag == "") {
-      console.log("Saving", child_over.dataset.base);
+      console.log("Saving in known", child_over.dataset.base);
       known_words.add(child_over.dataset.base);
-      setToLocal();
+      setToLocal(known_words, "userKnownWords");
+    }
+    return;
+  }
+  if (keysPressed.has('alt') && keysPressed.has('w')) {
+    if(child_over != undefined && child_over.dataset.tag == "") {
+      console.log("Saving in wanted", child_over.dataset.base);
+      wanted_words.add(child_over.dataset.base);
+      setToLocal(wanted_words, "userWantedWords");
     }
     return;
   }
@@ -60,10 +70,6 @@ document.addEventListener('keydown', (e) => {
     if(child_over != undefined) {
       showBorder(child_over);
     }
-    return;
-  }
-  if (keysPressed.has('alt') && keysPressed.has('backspace')){
-    removeLocal();
     return;
   }
   if (keysPressed.has('alt') && keysPressed.has('?')){
@@ -77,72 +83,89 @@ document.addEventListener('keyup', (e) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("*-* Message received !", message.type);
-  if (message.type === "require_words") {
+  if (message.type === "require_known_words") {
     const text = Array.from(known_words).join('\n');
-    sendResponse({text: text });
+    sendResponse({ text: text });
+    return;
   }
-  if (message.type === "send_words") {
-    loadWordText(message.text);
-    setToLocal();
+  if (message.type === "require_learning_words") {
+    const text = Array.from(learning_words).join('\n');
+    sendResponse({ text: text });
+    return;
+  }
+  if (message.type === "require_wanted_words") {
+    const text = Array.from(wanted_words).join('\n');
+    sendResponse({ text: text });
+    return;
+  }
+  if (message.type === "send_known_words") {
+    loadWordText(message.text, known_words);
+    setToLocal(known_words, "userKnownWords");
+  }
+  if (message.type === "send_learning_words") {
+    loadWordText(message.text, learning_words);
+    setToLocal(learning_words, "userLearningWords");
+  }
+  if (message.type === "send_wanted_words") {
+    loadWordText(message.text, wanted_words);
+    setToLocal(wanted_words, "userWantedWords");
   }
   if (message.type === "reload_words") {
     known_words.clear();
-    loadFromLocal();
+    loadFromLocal(known_words, "userKnownWords");
   }
   return true;
 });
 
-function loadFromLocal(){
-  chrome.storage.local.get("userKnownWords", (result) => {
-    const wordList = result.userKnownWords || [];
+function loadFromLocal(targetSet, localId){
+  chrome.storage.local.get(localId, (result) => {
+    const wordList = result[localId] || [];
     for(let word of wordList){
-      known_words.add(word);
+      targetSet.add(word);
     }
-    console.log(`*-* ${known_words.size} words localy loaded`);
+    console.log(`*-* ${targetSet.size} words localy loaded`);
   });
 }
-function setToLocal(){
-  chrome.storage.local.set({ userKnownWords: Array.from(known_words) }, () => {
+function setToLocal(targetSet, localId){
+  // thanks to json in js, { localId : ... } <=> {"localId" : ...} ==> [localId] is needed
+  chrome.storage.local.set({ [localId] : Array.from(targetSet) }, () => {
   });
 }
-function removeLocal(){
-  chrome.storage.local.remove("userKnownWords", () => {
-    console.log("*-* Removed local storage for userKnownWords.")
-  });
-}
+
 function countLocal(){
   chrome.storage.local.get("userKnownWords", (result) => {
-    const wordList = result.userKnownWords || [];
-    console.log("*-* In local : ", wordList);
-    console.log("*-* In client : ", known_words);
+    const wordList = result["userKnownWords"] || [];
+    console.log("*-* In local storage known : ", wordList.length);
+    console.log("*-* In client PC : ", known_words.size);
+  });
+  chrome.storage.local.get("userLearningWords", (result) => {
+    const wordList = result["userLearningWords"] || [];
+    console.log("*-* In local storage learning : ", wordList.length);
+    console.log("*-* In client PC : ", learning_words.size);
+  });
+  chrome.storage.local.get("userWantedWords", (result) => {
+    const wordList = result["userWantedWords"] || [];
+    console.log("*-* In local storage wanted : ", wordList.length);
+    console.log("*-* In client PC : ", wanted_words.size);
   });
 }
 
-async function loadWordText(text, type = "known"){
+async function loadWordText(text, targetSet){
   const words = text.split('\n');
-  console.log(`Text with ${words.length} words given !`)
-  if(type == "known"){
-    for(let word of words){
-      known_words.add(word);
-    }
-  }else{
-    for(let word of words){
-      learning_words.add(word);
-    }
+  for(let word of words){
+    targetSet.add(word);
   }
 }
 
-async function loadWordList(type, url) {
-  const url_ext = chrome.runtime.getURL(url);
-  const response = await fetch(url_ext);
-  const text = await response.text();
-  loadWordText(text, type)
-  if(type == "known"){
-    console.log(`*-* ${known_words.size} words loaded`);
-    loadFromLocal();
-  }else{
-    console.log(`*-* ${learning_words.size} words loaded`);
+async function loadWordList(targetSet, urlFile, localId) {
+  if(urlFile.length != 0){
+    const url_ext = chrome.runtime.getURL(urlFile);
+    const response = await fetch(url_ext);
+    const text = await response.text();
+    loadWordText(text, targetSet)
+    console.log(`*-* ${targetSet.size} words loaded`);
   }
+  loadFromLocal(targetSet, localId);
 }
 
 
