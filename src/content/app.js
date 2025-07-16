@@ -1,4 +1,4 @@
-import { learning_words, known_words, wanted_words, settings, _tokenizer, showBorder } from './tokenizer';
+import { learning_words, known_words, wanted_words, settings, _tokenizer, showBorder, whatColor, isSkipped } from './tokenizer';
 import { spanChildren, tryObserve } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
@@ -102,36 +102,43 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "send_known_words") {
     loadWordText(message.text, known_words);
     setToLocal(known_words, "userKnownWords");
+    reloadColor();
     return;
   }
   if (message.type === "send_learning_words") {
     loadWordText(message.text, learning_words);
     setToLocal(learning_words, "userLearningWords");
+    reloadColor();
     return;
   }
   if (message.type === "send_wanted_words") {
     loadWordText(message.text, wanted_words);
     setToLocal(wanted_words, "userWantedWords");
+    reloadColor();
     return;
   }
   if (message.type === "reload_known_words") {
     known_words.clear();
     loadFromLocal(known_words, "userKnownWords");
+    reloadColor();
     return;
   }
   if (message.type === "reload_learning_words") {
     learning_words.clear();
     loadFromLocal(learning_words, "userLearningWords");
+    reloadColor();
     return;
   }
   if (message.type === "reload_wanted_words") {
     wanted_words.clear();
     loadFromLocal(wanted_words, "userWantedWords");
+    reloadColor();
     return;
   }
   if (message.type === "settings_update") {
     settings[message.key] = message.value;
     setSettings();
+    reloadColor();
     return;
   }
   return true;
@@ -200,6 +207,25 @@ async function loadWordList(targetSet, urlFile, localId) {
   loadFromLocal(targetSet, localId);
 }
 
+function reloadColor(){
+  if(navType){ // netflix automaticaly update the subs
+    return;
+  }
+  const elementsWithEmptyTag = Array.from(document.querySelectorAll('ruby[data-tag]'));
+  for(let element of elementsWithEmptyTag){
+    const pos = element.dataset.pos;
+    const base = element.dataset.base;
+    const baseColor = element.dataset.bc;
+    const skip = isSkipped(pos);
+    element.setAttribute("tag", skip);
+    if(skip == ""){
+      element.setAttribute("style", `color : ${whatColor(pos, base, baseColor)}`);
+    }else{
+      element.setAttribute("style", `color : ${baseColor}`);
+    }
+
+  }
+}
 
 if (navType) {
   tryObserve();

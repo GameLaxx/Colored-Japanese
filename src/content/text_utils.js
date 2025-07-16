@@ -19,7 +19,6 @@ export function editElementRecursively(element, baseColor = "black") {
     wrapper.innerHTML = html;
 
     element.replaceWith(...wrapper.childNodes);
-    // element.dataset.colorProcessed = true;
     return;
   }
   if (element.nodeType === Node.ELEMENT_NODE) { // html element that contains more than just text

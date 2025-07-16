@@ -36,6 +36,28 @@ function isAdjective(token){
   }
 }
 
+export function isSkipped(pos){
+  if((settings["symbols_skip"] && pos == "記号") || (settings["interjections_skip"] && pos == "感動詞") 
+    || (settings["adverbs_skip"] && pos == "副詞")){
+    // symbol, interjection, adverbs
+    return "skip";
+  }
+  return "";
+}
+
+export function whatColor(pos, base, baseColor){
+  if(pos == "助詞"){ // particle
+    return (settings["particles_color"]) ? "#42c8f5" : baseColor;
+  }else if(known_words.has(base)){
+    return (settings["known_color"]) ? "#02d802" : baseColor;
+  }else if(learning_words.has(base)){
+    return (settings["learning_color"]) ? "#faed75" : baseColor;
+  }else if(wanted_words.has(base)){
+    return (settings["wanted_color"]) ? "#f442b8ff" : baseColor;
+  }
+  return (settings["missing_color"]) ? "#ff0000ff" : baseColor;
+}
+
 export function editText(tokens, index, baseColor = "white"){
   let ret = (index == 0) ? "" : "<br>";
   let base = "";
@@ -46,35 +68,18 @@ export function editText(tokens, index, baseColor = "white"){
   let is_adjective = 0; // 0 is not, 2 is yes
   let tag = "";
   let color = "";
+  let pos = "";
   for(let i = 0; i < tokens.length; i++){
     if(tokens[i] == undefined){
-      continue;
-    }
-    if(tokens[i].reading == undefined){
-      ret += `<ruby data-base="${tokens[i].surface_form}" data-tag="skip">${tokens[i].surface_form}</ruby>`;
       continue;
     }
     tmp += tokens[i].surface_form;
     if(is_verb == 0 && is_adjective == 0 && is_parenthesis_open == false && is_parenthesis_close == false){ // start of a new case
       base = tokens[i].basic_form;
-      if(tokens[i].pos == "助詞"){ // particle
-        color = (settings["particles_color"]) ? "#42c8f5" : baseColor;
-      }else if(known_words.has(base)){
-        color = (settings["known_color"]) ? "#02d802" : baseColor;
-      }else if(learning_words.has(base)){
-        color = (settings["learning_color"]) ? "#faed75" : baseColor;
-      }else if(wanted_words.has(base)){
-        color = (settings["wanted_color"]) ? "#f442b8ff" : baseColor;
-      }else{
-        color = (settings["missing_color"]) ? "#ff0000ff" : baseColor;
-      }
+      pos = tokens[i].pos;
+      color = whatColor(pos, base, baseColor)
     }
-    if((settings["symbols_skip"] && tokens[i].pos == "記号") || (settings["interjections_skip"] && tokens[i].pos == "感動詞") 
-      || (settings["adverbs_skip"] && tokens[i].pos == "副詞")
-      || tokens[i].pos == "連体詞" || (is_verb + is_adjective == 0 && tokens[i].pos == "助動詞")){
-      // symbol, interjection, pre-noun adjectives (might be too much), bound auxialary when not a verb
-      tag = "skip";
-    }
+    tag = isSkipped(pos);
     is_parenthesis_open = is_parenthesis_open || (tokens[i].pos_detail_1 == "括弧開" && tokens[i].surface_form != "「"); // opened parenthesis
     is_parenthesis_close = tokens[i].pos_detail_1 == "括弧閉"; // closed parenthesis
     is_verb = isVerb(tokens[i]);
@@ -111,7 +116,7 @@ export function editText(tokens, index, baseColor = "white"){
     if(tag == "skip"){
       color = baseColor;
     }
-    ret += `<ruby data-base="${base}" data-tag="${tag}" style="color : ${color}">${tmp}</ruby>`;
+    ret += `<ruby data-base="${base}" data-pos="${pos}" data-tag="${tag}" data-bc="${baseColor}" style="color : ${color}">${tmp}</ruby>`;
     tmp = "";
     base = "";
     tag = "";
