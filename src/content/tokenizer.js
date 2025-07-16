@@ -230,7 +230,7 @@ export function editBase(element, index){
  * Toggles a border around a given element. (Helps to see the tokenization)
  *
  * @param {HTMLElement} element - The HTML element.
- * @returns {undefined} Applies or removes the border of the element.
+ * @returns {void} Applies or removes the border of the element.
  */
 export function showBorder(element){
   if(element.style.border == ""){
