@@ -52,8 +52,8 @@ function isVerb(token){
   if(token.pos == "動詞" || token.pos == "助動詞"){
     // (IN ORDER) verb, bound auxiliary verb
     return 2;
-  }else if(token.pos_detail_1 == "サ変接続" || token.basic_form == "て"){
-    // (IN ORDER) irregular conjugation with suru, te is a particul not a verb but can be a suffix for a verb
+  }else if(token.pos_detail_1 == "サ変接続" || token.basic_form == "て" || token.basic_form == "で"){
+    // (IN ORDER) irregular conjugation with suru, te is a particule not a verb but can be a suffix for a verb
     return 1;
   }else{
     return 0;
@@ -172,10 +172,15 @@ export function editText(tokens, index, baseColor = "white"){
         // temporary verb and next token is suru
         is_verb = 2;
         continue;
+      }      
+      if(tokens[i + 1].basic_form == "ます" || tokens[i + 1].basic_form == "いる"){
+        // temporary verb and next token is imasu / iru form
+        is_verb = 2;
+        continue;
       }
     }
     if(is_verb == 2 && i != tokens.length - 1){ // verb for sure
-      if((tokens[i].conjugated_form == "連用タ接続" || tokens[i].conjugated_form == "連用形") && tokens[i + 1].basic_form == "て"){
+      if((tokens[i].conjugated_form == "連用タ接続" || tokens[i].conjugated_form == "連用形") && (tokens[i + 1].basic_form == "て" || tokens[i + 1].basic_form == "で")){
         // (IN ORDER) continuous use, continuous form
         continue;
       }
