@@ -5,6 +5,7 @@
   "description": "Add color to subs depending on the knowledge of the word",
 
   "action": {
+    "default_popup": "src/popup.html",
     "default_icon": {
       "16": "icons/icon.jpg",
       "48": "icons/icon.jpg",
@@ -14,7 +15,9 @@
 
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "downloads",
+    "storage"
   ],
 
   "host_permissions": [
@@ -28,8 +31,8 @@
 
   "content_scripts": [
     {
-      "matches": ["https://www.netflix.com/*"],
-      "js": ["src/content.js"],
+      "matches": ["<all_urls>"],
+      "js": ["src/content/app.js"],
       "run_at": "document_idle"
     }
   ],

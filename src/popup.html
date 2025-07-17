@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ext CL</title>
+  </head>
+  <body>
+    <button id="save_known_btn" class="save_btn"> 📖 SAVE KNOWN WORDS</button>
+    <button id="save_learn_btn" class="save_btn">🔎 SAVE LEARNING WORDS</button>
+    <button id="save_wanted_btn" class="save_btn">🙏 SAVE WANTED WORDS</button>
+    <div class="content">
+      <div class="menu">
+        <div id="known" class="submenu target">
+          Known words
+        </div>
+        <div id="learning" class="submenu">
+          Learning words
+        </div>
+        <div id="wanted" class="submenu">
+          Wanted words
+        </div>
+        <div id="skipped" class="submenu">
+          Skipped words
+        </div>
+        <div id="settings" class="submenu">
+          Settings
+        </div>
+      </div>
+      <div class="tools">
+        <div id="known_tools" class="subtool show">
+          <div class="slot">
+            <label class="file-upload">
+              <input type="file" id="load_known_btn" accept=".txt"/>
+              Load words from a file
+            </label>
+          </div>
+          <div class="dictionary">
+            Your current known words
+          </div>
+        </div>
+        <div id="learning_tools" class="subtool">
+          <div class="slot">
+            <label class="file-upload">
+              <input type="file" id="load_learning_btn" accept=".txt"/>
+              Load words from a file
+            </label>
+          </div>
+          <div class="dictionary">
+            Your current learning words
+          </div>
+        </div>
+        <div id="wanted_tools" class="subtool">
+          <div class="slot">
+            <label class="file-upload">
+              <input type="file" id="load_wanted_btn" accept=".txt"/>
+              Load words from a file
+            </label>
+          </div>
+          <div class="dictionary">
+            Your current wanted words
+          </div>
+        </div>
+        <div id="skipped_tools" class="subtool">
+          <div class="slot">
+            <label class="file-upload">
+              <input type="file" id="load_skipped_btn" accept=".txt"/>
+              Load words from a file
+            </label>
+          </div>
+          <div class="dictionary">
+            Your current skipped words
+          </div>
+        </div>
+        <div id="settings_tools" class="subtool">
+          <h2>Color shown</h2>
+          <div class="slot between">
+            <p>Color known words</p>
+            <label class="switch">
+              <input type="checkbox" id="known_color">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Color learning words</p>
+            <label class="switch">
+              <input type="checkbox" id="learning_color">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Color wanted words</p>
+            <label class="switch">
+              <input type="checkbox" id="wanted_color">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Color missing words</p>
+            <label class="switch">
+              <input type="checkbox" id="missing_color">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Color particles</p>
+            <label class="switch">
+              <input type="checkbox" id="particles_color">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <h2>Skip categories</h2>
+          <div class="slot between">
+            <p>Skip adverbs</p>
+            <label class="switch">
+              <input type="checkbox" id="adverbs_skip">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Skip interjections</p>
+            <label class="switch">
+              <input type="checkbox" id="interjections_skip" checked="true">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Skip symbols</p>
+            <label class="switch">
+              <input type="checkbox" id="symbols_skip" checked="true">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Skip numbers</p>
+            <label class="switch">
+              <input type="checkbox" id="numbers_skip">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="slot between">
+            <p>Skip katakanas</p>
+            <label class="switch">
+              <input type="checkbox" id="katakanas_skip">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>
+<style>
+  body {
+    width: 600px;
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    background-color: rgb(50, 49, 49);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  /* General buttons */
+  button {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .save_btn{
+    background: rgb(134, 43, 0);
+    border: none;
+    color: white;
+    border-radius: 5px;
+    margin: 5px;
+    transition: .1s;
+    font-size: small;
+  }
+  .save_btn:hover{
+    background: rgb(109, 34, 0);
+  }
+
+  .content{
+    width: 100%;
+    height: 300px;
+    display: flex;
+    flex-direction: row;
+  }
+
+  /* Menu */
+  .menu{
+    width: 30%;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-direction: column;
+  }
+  .submenu{
+    padding: 10px 20px;
+    color: white;
+    font-size: small;
+    text-transform: uppercase;
+  }
+  .submenu:hover{
+    cursor: pointer;
+  }
+  .target{
+    color: rgb(134, 43, 0);
+    border-right: 2px solid rgb(134, 43, 0);;
+  }
+
+  /* Tools pannels */
+  .tools{
+    width: 70%;
+  }
+  .subtool{
+    display: none;
+    height: 100%;
+    width: 100%;
+    overflow-y: scroll;
+  }
+  .show{
+    display: block;
+  }
+  .subtool h2{
+    color: gray;
+    margin-left: 10px;
+  }
+  .subtool .slot{
+    height: 50px;
+    margin: 10px;
+    padding: 0 10px;
+    border-radius: 3px;
+    border: 1px solid gray;
+    display: flex;
+    align-items: center;
+    color: gray;
+  }
+  .subtool .slot.between{
+    justify-content: space-between;
+  }
+  .subtool input[type="file"] {
+    display: none;
+  }
+  .subtool .file-upload:hover {
+    cursor: pointer;
+  }
+  .subtool .dictionary{
+    margin: 10px 10px;
+    padding: 10px 10px;
+    border-radius: 3px;
+    border: 1px solid gray;
+    color: gray;
+  }
+  .subtool .dictionary .word{
+    height: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    margin: 5px 0;
+    border: 1px solid gray;
+    border-left: 0;
+    border-right: 0;
+  }
+  .subtool .dictionary .word p{
+    padding: 0;
+    margin: 0;
+  }
+  .subtool .dictionary .word div{
+    margin-right: 10px;
+    height: 15px;
+    width: 15px;
+    background-color: red;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.2s;
+  }
+  .subtool .dictionary .word div:hover{
+    background-color: rgb(119, 0, 0);
+    cursor: pointer;
+  }
+
+  /* Switch CSS */
+  .switch {
+    font-size: 17px;
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 15px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #656666;
+    border-radius: 50px;
+    transition: 0.2s;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 10px;
+    width: 10px;
+    top: 2.5px;
+    left: 3px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    transition: 0.2s;
+  }
+
+  .switch input:checked + .slider {
+    background: rgb(134, 43, 0);
+  }
+
+  .switch input:focus + .slider {
+    box-shadow: 0 0 1px rgb(134, 43, 0);
+  }
+
+  .switch input:checked + .slider:before {
+    transform: translateX(14px);
+  }
+</style>

@@ -12,9 +12,15 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        content: 'src/content.js',
+        content: 'src/content/app.js',
         background: 'src/background.js',
-        popupScript: 'src/popup.js'
+        popup: 'src/popup.html'
+      },
+      output: {
+        entryFileNames: chunk => {
+          if (chunk.name === 'content') return 'content.js';
+          return '[name].js';
+        }
       }
     }
   }
