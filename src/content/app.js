@@ -75,9 +75,9 @@ document.addEventListener('keydown', (e) => {
   keysPressed.add(e.key.toLowerCase());
 
   const actions = {
-    a: { set: knownWords, label: "known", key: 'a' },
-    w: { set: wantedWords, label: "wanted", key: 'w' },
-    s: { set: skippedWords, label: "skipped", key: 's' }
+    a: { set: knownWords, label: "known"},
+    w: { set: wantedWords, label: "wanted"},
+    s: { set: skippedWords, label: "skipped"}
   };
 
   for (const key in actions) {
@@ -117,89 +117,64 @@ document.addEventListener('keyup', (e) => {
 */ 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("*-* Message received !", message.type);
-  if (message.type === "require_known_words") {
-    const text = Array.from(knownWords).join('\n');
-    sendResponse({ text: text });
-    return;
+  
+  const require = {
+    require_known_words: knownWords,
+    require_learning_words: learningWords,
+    require_wanted_words: wantedWords
+  };
+  for (const key in actions) {
+    if (message.type === key) {
+      const text = Array.from(require[key]).join('\n');
+      sendResponse({ text: text });
+      return;
+    }
   }
-  if (message.type === "require_learning_words") {
-    const text = Array.from(learningWords).join('\n');
-    sendResponse({ text: text });
-    return;
+  
+  const send = {
+    send_known_words: {set : knownWords, localId : "userKnownWords"},
+    send_learning_words: {set : learningWords, localId : "userLearningWords"},
+    send_wanted_words: {set : wantedWords, localId : "userWantedWords"},
+    send_skipped_words: {set : skippedWords, localId : "userSkippedWords"},
+  };
+  for(const key in send){
+    if (message.type === key) {
+      loadWordText(message.text, send[key].set);
+      setToLocal(send[key].set, send[key].localId);
+      sendResponse({}); // send empty response to trigger call back
+      return;
+    }
   }
-  if (message.type === "require_wanted_words") {
-    const text = Array.from(wantedWords).join('\n');
-    sendResponse({ text: text });
-    return;
+  
+  const reload = {
+    reload_known_words: {set : knownWords, localId : "userKnownWords"},
+    reload_learning_words: {set : learningWords, localId : "userLearningWords"},
+    reload_wanted_words: {set : wantedWords, localId : "userWantedWords"},
+    reload_skipped_words: {set : skippedWords, localId : "userSkippedWords"},
+  };
+  for(const key in reload){
+    if (message.type === key) {
+      reload[key].set.clear();
+      loadFromLocal(reload[key].set, reload[key].localId);
+      return;
+    }
   }
-  if (message.type === "send_known_words") {
-    loadWordText(message.text, knownWords);
-    setToLocal(knownWords, "userKnownWords");
-    sendResponse({});
-    return;
+   
+  const _delete = {
+    delete_known: {set : knownWords, localId : "userKnownWords"},
+    delete_learning: {set : learningWords, localId : "userLearningWords"},
+    delete_wanted: {set : wantedWords, localId : "userWantedWords"},
+    delete_skipped: {set : skippedWords, localId : "userSkippedWords"},
+  };
+  for(const key in reload){
+    if (message.type === key) {
+      _delete[key].set.clear();
+      setToLocal(_delete[key].set, _delete[key].localId);
+      sendResponse({}); // send empty response to trigger call back
+      return;
+    }
   }
-  if (message.type === "send_learning_words") {
-    loadWordText(message.text, learningWords);
-    setToLocal(learningWords, "userLearningWords");
-    sendResponse({});
-    return;
-  }
-  if (message.type === "send_wanted_words") {
-    loadWordText(message.text, wantedWords);
-    setToLocal(wantedWords, "userWantedWords");
-    sendResponse({});
-    return;
-  }
-  if (message.type === "send_skipped_words") {
-    loadWordText(message.text, skippedWords);
-    setToLocal(skippedWords, "userSkippedWords");
-    sendResponse({});
-    return;
-  }
-  if (message.type === "reload_known_words") {
-    knownWords.clear();
-    loadFromLocal(knownWords, "userKnownWords");
-    return;
-  }
-  if (message.type === "reload_learning_words") {
-    learningWords.clear();
-    loadFromLocal(learningWords, "userLearningWords");
-    return;
-  }
-  if (message.type === "reload_wanted_words") {
-    wantedWords.clear();
-    loadFromLocal(wantedWords, "userWantedWords");
-    return;
-  }
-  if (message.type === "reload_skipped_words") {
-    skippedWords.clear();
-    loadFromLocal(skippedWords, "userSkippedWords");
-    return;
-  }
-  if (message.type === "delete_known") {
-    knownWords.clear();
-    setToLocal(knownWords, "userKnownWords");
-    sendResponse({});
-    return;
-  }
-  if (message.type === "delete_learning") {
-    learningWords.clear();
-    setToLocal(learningWords, "userLearningWords");
-    sendResponse({});
-    return;
-  }
-  if (message.type === "delete_wanted") {
-    wantedWords.clear();
-    setToLocal(wantedWords, "userWantedWords");
-    sendResponse({});
-    return;
-  }
-  if (message.type === "delete_skipped") {
-    skippedWords.clear();
-    setToLocal(skippedWords, "userSkippedWords");
-    sendResponse({});
-    return;
-  }
+
   if (message.type === "settings_update") {
     settings[message.key] = message.value;
     setSettings();
