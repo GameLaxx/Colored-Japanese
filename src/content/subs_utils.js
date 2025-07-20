@@ -64,7 +64,7 @@ export const tryObserveYoutube = () => {
   const selector = ".ytp-caption-window-container";
   const target = document.querySelector(selector);
   if (target) {
-    console.log("*-* Found the youtube subs !")
+    console.log("*-* Found the youtube subs !", target);
     observeElement(selector, (mutation) => {
       spanChildren = mutation.target.querySelectorAll(".ytp-caption-segment");
       if(spanChildren.length == 0){

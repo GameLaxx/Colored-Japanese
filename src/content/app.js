@@ -13,6 +13,12 @@ loadFromLocal(wantedWords, "userWantedWords");
 loadFromLocal(skippedWords,  "userSkippedWords");
 loadSettings();
 
+// helper
+function capitalize(str) {
+  if (!str) return "";
+  return str[0].toUpperCase() + str.slice(1).toLowerCase();
+}
+
 /* 
 ********************************************************************
 * Mouse move event
@@ -68,41 +74,36 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   keysPressed.add(e.key.toLowerCase());
 
-  if (keysPressed.has('alt') && keysPressed.has('a')) {
-    if(child_over != undefined && child_over.dataset.tag == "") {
-      console.log("Saving in known", child_over.dataset.base);
-      knownWords.add(child_over.dataset.base);
-      setToLocal(knownWords, "userKnownWords");
-      reloadColor();
+  const actions = {
+    a: { set: knownWords, label: "known", key: 'a' },
+    w: { set: wantedWords, label: "wanted", key: 'w' },
+    s: { set: skippedWords, label: "skipped", key: 's' }
+  };
+
+  for (const key in actions) {
+    if (keysPressed.has('alt') && keysPressed.has(key)) {
+      const { set, label } = actions[key];
+      if (child_over && child_over.dataset.tag === "") {
+        const word = child_over.dataset.base;
+        if(set.has(word)){
+          console.log(`Deleting in ${label}`, word);
+          set.delete(word);
+        }else{
+          console.log(`Saving in ${label}`, word);
+          set.add(word);
+        }
+        setToLocal(set, `user${capitalize(label)}Words`);
+        reloadColor();
+      }
+      return;
     }
-    return;
-  }
-  if (keysPressed.has('alt') && keysPressed.has('w')) {
-    if(child_over != undefined && child_over.dataset.tag == "") {
-      console.log("Saving in wanted", child_over.dataset.base);
-      wantedWords.add(child_over.dataset.base);
-      setToLocal(wantedWords, "userWantedWords");
-      reloadColor();
-    }
-    return;
-  }
-  if (keysPressed.has('alt') && keysPressed.has('s')) {
-    if(child_over != undefined && child_over.dataset.tag == "") {
-      console.log("Saving in skipped", child_over.dataset.base);
-      skippedWords.add(child_over.dataset.base);
-      setToLocal(skippedWords, "userSkippedWords");
-      reloadColor();
-    }
-    return;
-  }
-  if (keysPressed.has('alt') && keysPressed.has('!')) {
-    if(child_over != undefined) {
-      showBorder(child_over);
-    }
-    return;
   }
   if (keysPressed.has('alt') && keysPressed.has('?')){
     countLocal();
+  }
+  if (keysPressed.has('alt') && keysPressed.has('y') && youtubeFlag){
+    tryObserveYoutube();
+    return
   }
 });
 document.addEventListener('keyup', (e) => {
