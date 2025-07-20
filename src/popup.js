@@ -95,18 +95,21 @@ function updateTarget(clickedElement, otherElementList, className) {
 }
 
 function updateLocalStorage(event){
-  if (!event.target.classList.contains("delete_word")) {
+  if (!event.target.classList.contains("delete_btn")) {
     return
   }
   const wordDiv = event.target.closest(".word");
   const wordText = wordDiv.querySelector(".word_string").textContent.trim();
   const tag = wordDiv.closest(".dictionary").dataset.tag;
+  const titleH2 = wordDiv.closest(".subtool").querySelector(".title h2");
   if (!tag) {
     return;
   }
   chrome.storage.local.get(tag, (result) => {
     let words = result[tag] || [];
     const newWords = words.filter(w => w !== wordText);
+    localWords[localIdToHtmlId(tag)] = newWords;
+    titleH2.innerText = titleH2.innerText.split("(")[0] + `(${newWords.length})`;
     chrome.storage.local.set({ [tag]: newWords }, () => {
       wordDiv.remove();
     });
