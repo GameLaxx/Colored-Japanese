@@ -134,16 +134,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "send_known_words") {
     loadWordText(message.text, knownWords);
     setToLocal(knownWords, "userKnownWords");
+    sendResponse({});
     return;
   }
   if (message.type === "send_learning_words") {
     loadWordText(message.text, learningWords);
     setToLocal(learningWords, "userLearningWords");
+    sendResponse({});
     return;
   }
   if (message.type === "send_wanted_words") {
     loadWordText(message.text, wantedWords);
     setToLocal(wantedWords, "userWantedWords");
+    sendResponse({});
+    return;
+  }
+  if (message.type === "send_skipped_words") {
+    loadWordText(message.text, skippedWords);
+    setToLocal(skippedWords, "userSkippedWords");
+    sendResponse({});
     return;
   }
   if (message.type === "reload_known_words") {
@@ -164,6 +173,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "reload_skipped_words") {
     skippedWords.clear();
     loadFromLocal(skippedWords, "userSkippedWords");
+    return;
+  }
+  if (message.type === "delete_known") {
+    knownWords.clear();
+    setToLocal(knownWords, "userKnownWords");
+    sendResponse({});
+    return;
+  }
+  if (message.type === "delete_learning") {
+    learningWords.clear();
+    setToLocal(learningWords, "userLearningWords");
+    sendResponse({});
+    return;
+  }
+  if (message.type === "delete_wanted") {
+    wantedWords.clear();
+    setToLocal(wantedWords, "userWantedWords");
+    sendResponse({});
+    return;
+  }
+  if (message.type === "delete_skipped") {
+    skippedWords.clear();
+    setToLocal(skippedWords, "userSkippedWords");
+    sendResponse({});
     return;
   }
   if (message.type === "settings_update") {

@@ -48,10 +48,12 @@ function setWordList(messageId, event){
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const activeTab = tabs[0];
       const activeTabId = activeTab.id;
-      chrome.tabs.sendMessage(activeTabId, { type: messageId, text : content });
+      chrome.tabs.sendMessage(activeTabId, { type: messageId, text : content }, (response) => {
+        loadDictionary(`user${capitalize(messageId.split("_")[1])}Words`, true);
+      });
     });
   };
-  reader.readAsText(file);
+  reader.readAsText(file); // will call reader.onload
 }
 
 document.getElementById('load_known_btn').addEventListener('change', (event) => {
@@ -62,6 +64,9 @@ document.getElementById('load_learning_btn').addEventListener('change', (event) 
 });
 document.getElementById('load_wanted_btn').addEventListener('change', (event) => {
   setWordList("send_wanted_words", event);
+});
+document.getElementById('load_skipped_btn').addEventListener('change', (event) => {
+  setWordList("send_skipped_words", event);
 });
 
 const submenus = document.querySelectorAll(".submenu");
@@ -91,6 +96,20 @@ submenus.forEach(submenu => {
 function updateTarget(clickedElement, otherElementList, className) {
   otherElementList.forEach(other => {
     other.classList.toggle(className, other === clickedElement);
+  });
+}
+
+function deleteAllWords(event) {
+  if(!confirm("Do you want to delete every word from this list ?")){
+    return;
+  }
+  const htmlId = event.target.id.split("_")[2];    
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    const activeTab = tabs[0];
+    const activeTabId = activeTab.id;
+    chrome.tabs.sendMessage(activeTabId, { type: "delete_" + htmlId}, (response) => {
+      loadDictionary(`user${capitalize(htmlId)}Words`, true);
+    });
   });
 }
 
@@ -144,20 +163,30 @@ function updateFindBox(event){
   event.target.nextElementSibling.classList.toggle("false", !localWords[htmlId].includes(event.target.value));
 }
 
-function loadDictionary(id_str){
+function loadDictionary(id_str, reload = false){
   const htmlId = localIdToHtmlId(id_str);
   const pannel = document.getElementById(htmlId + "_tools");
   updateTarget(pannel, subtools, "show");
   const dictionary = pannel.getElementsByClassName("dictionary")[0];
-  if(dictionary && dictionary.dataset.tag == undefined){
-    dictionary.dataset.tag = id_str;
+  if(dictionary && (dictionary.dataset.tag == undefined || reload)){
+    if(reload){
+      dictionary.innerHTML = "Your current known words"; // delete all childs
+    }else{
+      dictionary.dataset.tag = id_str;
+    }
     chrome.storage.local.get(id_str, (result) => {
       const wordList = result[id_str] || [];
       localWords[htmlId] = wordList;
-      const title = pannel.getElementsByTagName("h2")[0];
-      title.innerText = title.innerText + ` (${wordList.length})`;
-      const findInput = document.getElementById("find_" + htmlId);
-      findInput.addEventListener("input", (event) => updateFindBox(event));
+      const title = pannel.querySelector(".title h2");
+      if(reload){
+        title.innerText = title.innerText.split("(")[0] + `(${wordList.length})`;
+      }else{
+        title.innerText = title.innerText + ` (${wordList.length})`;
+        const allDeleteBtn = pannel.querySelector("#delete_all_" + htmlId);
+        allDeleteBtn.addEventListener("click", (event) => deleteAllWords(event)); 
+        const findInput = document.getElementById("find_" + htmlId);
+        findInput.addEventListener("input", (event) => updateFindBox(event));
+      }
       for(let word of wordList){
         const newWord = document.createElement("div");
         newWord.classList.toggle("word");
