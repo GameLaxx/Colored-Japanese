@@ -47,36 +47,57 @@
           </div>
         </div>
         <div id="learning_tools" class="subtool">
-          <h2>Learning words</h2>
+          <div class="title">
+            <h2>Learning words</h2>
+            <div id="delete_all_learning" class="delete_btn"></div>
+          </div>
           <div class="slot">
             <label class="file-upload">
               <input type="file" id="load_learning_btn" accept=".txt"/>
               Load words from a file
             </label>
           </div>
+          <div class="slot between">
+              <input type="text" class="searching" id="find_learning" placeholder="Search for words.."/>
+              <div class="isinside false"></div>
+          </div>
           <div class="dictionary">
             Your current learning words
           </div>
         </div>
         <div id="wanted_tools" class="subtool">
-          <h2>Wanted words</h2>
+          <div class="title">
+            <h2>Wanted words</h2>
+            <div id="delete_all_wanted" class="delete_btn"></div>
+          </div>
           <div class="slot">
             <label class="file-upload">
               <input type="file" id="load_wanted_btn" accept=".txt"/>
               Load words from a file
             </label>
           </div>
+          <div class="slot between">
+              <input type="text" class="searching" id="find_wanted" placeholder="Search for words.."/>
+              <div class="isinside false"></div>
+          </div>
           <div class="dictionary">
             Your current wanted words
           </div>
         </div>
         <div id="skipped_tools" class="subtool">
-          <h2>Skipped words</h2>
+          <div class="title">
+            <h2>Skipped words</h2>
+            <div id="delete_all_skipped" class="delete_btn"></div>
+          </div>
           <div class="slot">
             <label class="file-upload">
               <input type="file" id="load_skipped_btn" accept=".txt"/>
               Load words from a file
             </label>
+          </div>
+          <div class="slot between">
+              <input type="text" class="searching" id="find_skipped" placeholder="Search for words.."/>
+              <div class="isinside false"></div>
           </div>
           <div class="dictionary">
             Your current skipped words
