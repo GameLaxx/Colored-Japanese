@@ -28,17 +28,26 @@
       </div>
       <div class="tools">
         <div id="known_tools" class="subtool show">
+          <div class="title">
+            <h2>Known words</h2>
+            <div id="delete_all_known" class="delete_btn"></div>
+          </div>
           <div class="slot">
             <label class="file-upload">
               <input type="file" id="load_known_btn" accept=".txt"/>
               Load words from a file
             </label>
           </div>
+          <div class="slot between">
+              <input type="text" class="searching" id="find_known" placeholder="Search for words.."/>
+              <div class="isinside false"></div>
+          </div>
           <div class="dictionary">
             Your current known words
           </div>
         </div>
         <div id="learning_tools" class="subtool">
+          <h2>Learning words</h2>
           <div class="slot">
             <label class="file-upload">
               <input type="file" id="load_learning_btn" accept=".txt"/>
@@ -50,6 +59,7 @@
           </div>
         </div>
         <div id="wanted_tools" class="subtool">
+          <h2>Wanted words</h2>
           <div class="slot">
             <label class="file-upload">
               <input type="file" id="load_wanted_btn" accept=".txt"/>
@@ -61,6 +71,7 @@
           </div>
         </div>
         <div id="skipped_tools" class="subtool">
+          <h2>Skipped words</h2>
           <div class="slot">
             <label class="file-upload">
               <input type="file" id="load_skipped_btn" accept=".txt"/>
@@ -225,6 +236,11 @@
   .show{
     display: block;
   }
+  .subtool .title{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
   .subtool h2{
     color: gray;
     margin-left: 10px;
@@ -248,6 +264,23 @@
   .subtool .file-upload:hover {
     cursor: pointer;
   }
+  .subtool input[type="text"] {
+    background-color: transparent;
+    border: none;
+    color : white;
+    outline: none;
+  }
+  .subtool .isinside{
+    /* margin-right: 10px; */
+    height: 15px;
+    width: 15px;
+    background-color: greenyellow;
+    border-radius: 5px;
+    transition: 0.2s;
+  }
+  .subtool .isinside.false{
+    background-color: red;
+  }
   .subtool .dictionary{
     margin: 10px 10px;
     padding: 10px 10px;
@@ -270,7 +303,7 @@
     padding: 0;
     margin: 0;
   }
-  .subtool .dictionary .word div{
+  .subtool .delete_btn{
     margin-right: 10px;
     height: 15px;
     width: 15px;

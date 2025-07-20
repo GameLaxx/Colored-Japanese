@@ -1,3 +1,10 @@
+let localWords = {
+  "known" : [],
+  "learning" : [],
+  "wanted" : [],
+  "skipped" : []
+};
+
 function getWordList(messageId, fileOuput){
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     const activeTab = tabs[0];
@@ -129,21 +136,32 @@ function localIdToHtmlId(id_str){
   return "settings"
 }
 
+function updateFindBox(event){
+  const htmlId = event.target.id.split("_")[1];
+  event.target.nextElementSibling.classList.toggle("false", !localWords[htmlId].includes(event.target.value));
+}
+
 function loadDictionary(id_str){
-  const pannel = document.getElementById(localIdToHtmlId(id_str) + "_tools");
+  const htmlId = localIdToHtmlId(id_str);
+  const pannel = document.getElementById(htmlId + "_tools");
   updateTarget(pannel, subtools, "show");
   const dictionary = pannel.getElementsByClassName("dictionary")[0];
   if(dictionary && dictionary.dataset.tag == undefined){
     dictionary.dataset.tag = id_str;
     chrome.storage.local.get(id_str, (result) => {
       const wordList = result[id_str] || [];
+      localWords[htmlId] = wordList;
+      const title = pannel.getElementsByTagName("h2")[0];
+      title.innerText = title.innerText + ` (${wordList.length})`;
+      const findInput = document.getElementById("find_" + htmlId);
+      findInput.addEventListener("input", (event) => updateFindBox(event));
       for(let word of wordList){
         const newWord = document.createElement("div");
         newWord.classList.toggle("word");
         const newText = document.createElement("p");
         newText.classList.toggle("word_string");
         const newBtn = document.createElement("div");
-        newBtn.classList.toggle("delete_word");
+        newBtn.classList.toggle("delete_btn");
         newBtn.addEventListener("click", (event) => updateLocalStorage(event));
         newText.textContent = word;
         newWord.append(newText);
@@ -151,7 +169,7 @@ function loadDictionary(id_str){
         dictionary.append(newWord);
       }
     }); 
-  }else if(localIdToHtmlId(id_str) === "settings"){
+  }else if(htmlId === "settings"){
     chrome.storage.local.get("settings", (result) => {
       const localSettings = result["settings"] || {};
       for(let key in localSettings){
