@@ -1,8 +1,9 @@
-import { learningWords, knownWords, wantedWords, skippedWords, settings, _tokenizer, showBorder, whatColor, isSkipped } from './tokenizer';
+import { learningWords, knownWords, wantedWords, skippedWords, settings, _tokenizer, showBorder, whatColor, isSkipped, mergeElements } from './tokenizer';
 import { spanChildren, tryObserveNetflix, tryObserveYoutube } from './subs_utils';
 import { editElementRecursively } from './text_utils';
 
 let child_over = null;
+let mergingElement = null;
 let keysPressed = new Set();
 const netflixFlag = window.location.hostname.includes("netflix."); // true means on netflix, false else
 const youtubeFlag = window.location.hostname.includes("youtube."); // true means on youtube, false else
@@ -98,6 +99,32 @@ document.addEventListener('keydown', (e) => {
       return;
     }
   }
+  if (keysPressed.has('alt') && keysPressed.has('!')) {
+    if(child_over != undefined) {
+      showBorder(child_over);
+    }
+    return;
+  }
+  if (keysPressed.has('alt') && keysPressed.has('m')) {
+    if(child_over == undefined) {
+      return
+    }
+    if(mergingElement == undefined){
+      mergingElement = child_over;
+      return
+    }
+    if(child_over == mergingElement.nextSibling){
+      mergeElements(mergingElement, child_over);
+    }else if(child_over == mergingElement.previousSibling){
+      mergeElements(child_over, mergingElement);
+      mergingElement = child_over;
+    }else{
+      mergingElement = child_over;
+      return;
+    }
+    child_over = undefined;
+    return;
+  }
   if (keysPressed.has('alt') && keysPressed.has('?')){
     countLocal();
   }
@@ -123,7 +150,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     require_learning_words: learningWords,
     require_wanted_words: wantedWords
   };
-  for (const key in actions) {
+  for (const key in require) {
     if (message.type === key) {
       const text = Array.from(require[key]).join('\n');
       sendResponse({ text: text });
@@ -166,7 +193,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     delete_wanted: {set : wantedWords, localId : "userWantedWords"},
     delete_skipped: {set : skippedWords, localId : "userSkippedWords"},
   };
-  for(const key in reload){
+  for(const key in _delete){
     if (message.type === key) {
       _delete[key].set.clear();
       setToLocal(_delete[key].set, _delete[key].localId);

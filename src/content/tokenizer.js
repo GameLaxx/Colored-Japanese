@@ -244,3 +244,12 @@ export function showBorder(element){
     element.style.border = "";
   }
 }
+
+export function mergeElements(elementBase, brotherElement){
+  elementBase.innerText += brotherElement.innerText;
+  elementBase.dataset.base += brotherElement.dataset.base;
+  elementBase.dataset.pos = "合併"; // merged
+  elementBase.dataset.tag = "";
+  elementBase.setAttribute("style", `color : ${whatColor(elementBase.dataset.pos, elementBase.dataset.base, elementBase.dataset.bc)}`);
+  brotherElement.remove();
+}
