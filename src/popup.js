@@ -32,8 +32,8 @@ function getWordList(messageId, fileOuput){
 document.getElementById("save_known_btn").addEventListener("click", function () {
   getWordList("require_known_words", "known.txt")
 });
-document.getElementById("save_learn_btn").addEventListener("click", function () {
-  getWordList("require_learn_words", "learn.txt")
+document.getElementById("save_learning_btn").addEventListener("click", function () {
+  getWordList("require_learning_words", "learning.txt")
 });
 document.getElementById("save_wanted_btn").addEventListener("click", function () {
   getWordList("require_wanted_words", "wanted.txt")
