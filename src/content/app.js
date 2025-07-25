@@ -84,7 +84,7 @@ document.addEventListener('keydown', (e) => {
   for (const key in actions) {
     if (keysPressed.has('alt') && keysPressed.has(key)) {
       const { set, label } = actions[key];
-      if (child_over && child_over.dataset.tag === "") {
+      if (child_over) {
         const word = child_over.dataset.base;
         if(set.has(word)){
           console.log(`Deleting in ${label}`, word);
@@ -98,12 +98,6 @@ document.addEventListener('keydown', (e) => {
       }
       return;
     }
-  }
-  if (keysPressed.has('alt') && keysPressed.has('!')) {
-    if(child_over != undefined) {
-      showBorder(child_over);
-    }
-    return;
   }
   if (keysPressed.has('alt') && keysPressed.has('m')) {
     if(child_over == undefined) {
@@ -125,11 +119,21 @@ document.addEventListener('keydown', (e) => {
     child_over = undefined;
     return;
   }
+  if (keysPressed.has('alt') && keysPressed.has('!')) {
+    if(child_over != undefined) {
+      showBorder(child_over);
+    }
+    return;
+  }
   if (keysPressed.has('alt') && keysPressed.has('?')){
     countLocal();
   }
   if (keysPressed.has('alt') && keysPressed.has('y') && youtubeFlag){
     tryObserveYoutube();
+    return
+  }
+  if (keysPressed.has('alt') && keysPressed.has('r')){
+    toggleFurigana();
     return
   }
 });
@@ -291,6 +295,27 @@ function loadWordText(text, targetSet){
 * Update colored ruby tags
 ******************************************************************** 
 */ 
+function toggleFurigana(){
+  if(netflixFlag){ // netflix automaticaly update the subs => useless to show furigana
+    return;
+  }
+  if(!child_over){
+    return;
+  }
+  if(child_over.dataset.furigana == undefined){
+    child_over.dataset.furigana = "0";
+  }
+  if(child_over.dataset.furigana == "0"){
+    child_over.innerHTML += `<rt>${child_over.dataset.reading}</rt>`;
+    child_over.dataset.furigana = "1";
+  }else{
+    for(const child of child_over.children){
+      child_over.removeChild(child);
+    }
+    child_over.dataset.furigana = "0";
+  }
+}
+
 function reloadColor(){
   if(netflixFlag){ // netflix automaticaly update the subs
     return;
@@ -300,11 +325,13 @@ function reloadColor(){
     const pos = element.dataset.pos;
     const base = element.dataset.base;
     const baseColor = element.dataset.bc;
+    const color = whatColor(pos, base, baseColor);
     const skip = isSkipped(pos, base);
     element.setAttribute("tag", skip);
-    if(skip == ""){
-      element.setAttribute("style", `color : ${whatColor(pos, base, baseColor)}`);
-    }else{
+    if((color != baseColor && color != "#ff0000ff") || skip == ""){
+      element.setAttribute("tag", ""); // either skip == "" or colored and not missing but if colored then skip = ""
+      element.setAttribute("style", `color : ${color}`); // colored and not missing or not skipped
+    }else{ // skipped and baseColor or missing color
       element.setAttribute("style", `color : ${baseColor}`);
     }
 

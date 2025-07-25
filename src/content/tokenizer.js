@@ -42,6 +42,15 @@ function isKatakana(str) {
   return /^[\u30A0-\u30FF]+$/.test(str);
 }
 
+function katakanaToHiragana(str) {
+  if(!isKatakana(str)){
+    return str; // no katakana then nothing to do
+  }
+  return str.replace(/[\u30A1-\u30F6]/g, (char) =>
+    String.fromCharCode(char.charCodeAt(0) - 0x60)
+  );
+}
+
 /**
  * Checks a token can be seen as a verb. 
  *
@@ -152,7 +161,8 @@ export function editText(tokens, index, baseColor = "white"){
       base = tokens[i].basic_form;
       pos = (tokens[i].pos_detail_1 == "数") ? tokens[i].pos_detail_1 : tokens[i].pos;
       color = whatColor(pos, base, baseColor);
-      tag = isSkipped(pos, base);
+      reading = tokens[i].reading;
+      tag = (color == baseColor || color == "#ff0000ff") ? isSkipped(pos, base) : ""; // if not colored or colored in missing, check if skipped
     }
     // different flags
     isParenthesisOpen = isParenthesisOpen || (tokens[i].pos_detail_1 == "括弧開" && tokens[i].surface_form != "「"); // opened parenthesis
@@ -167,7 +177,7 @@ export function editText(tokens, index, baseColor = "white"){
       continue;
     }
     // verb tokenization can be very complex (ex : nondeiru [I am drinking] is divided into non - de - iru so we need to maintain a streak of verbs to get nondeiru as only on token)
-    if(is_verb == 1  && i != tokens.length - 1){ // either end of a streak or uncertain if it is a verb or not
+    if(is_verb == 1 && i != tokens.length - 1){ // either end of a streak or uncertain if it is a verb or not
       if(tokens[i + 1].basic_form == "する"){
         // temporary verb and next token is suru
         is_verb = 2;
@@ -204,7 +214,7 @@ export function editText(tokens, index, baseColor = "white"){
     if(tag == "skip"){
       color = baseColor;
     }
-    ret += `<ruby data-base="${base}" data-pos="${pos}" data-tag="${tag}" data-bc="${baseColor}" style="color : ${color}">${tmp}</ruby>`;
+    ret += `<ruby data-base="${base}" data-reading="${katakanaToHiragana(reading)}" data-pos="${pos}" data-tag="${tag}" data-bc="${baseColor}" style="color : ${color}">${tmp}</ruby>`;
     // reset of all the flags
     tmp = "";
     base = "";
