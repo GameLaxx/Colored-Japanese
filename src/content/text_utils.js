@@ -1,13 +1,13 @@
 import { editText, _tokenizer } from "./tokenizer";
 
 /**
- * Checks if the given string contains kanji.
+ * Checks if the given string contains japanese caracters.
  *
  * @param {string} str - The string to check.
- * @returns {boolean} True if it contains kanjis else false.
+ * @returns {boolean} True if it contains japanese caracters else false.
  */
-function containsKanji(text) {
-  return /[\u4E00-\u9FFF]/.test(text);
+function containsJapanese(text) {
+  return /[\u3040-\u30FF\u4E00-\u9FFF]/.test(text);
 }
 
 /**
@@ -20,7 +20,7 @@ export function editElementRecursively(element, baseColor = "black") {
   if (!_tokenizer) return;
   if (element.nodeType === Node.TEXT_NODE) { // pure text
     const text = element.textContent;
-    if (!containsKanji(text)){ // no kanjis so no need to parse
+    if (!containsJapanese(text)){ // no kanjis so no need to parse
       return;
     }
 

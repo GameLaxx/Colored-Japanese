@@ -87,10 +87,10 @@ document.addEventListener('keydown', (e) => {
       if (child_over) {
         const word = child_over.dataset.base;
         if(set.has(word)){
-          console.log(`Deleting in ${label}`, word);
+          console.log(`*-* Deleting in ${label}`, word);
           set.delete(word);
         }else{
-          console.log(`Saving in ${label}`, word);
+          console.log(`*-* Saving in ${label}`, word);
           set.add(word);
         }
         setToLocal(set, `user${capitalize(label)}Words`);

@@ -116,7 +116,7 @@ export function isSkipped(pos, base){
  * @returns {string} Returns the color if it fits in a certain category and its settings is on true else the base color.
  */
 export function whatColor(pos, base, baseColor){
-  if(pos == "助詞"){ // particle
+  if(pos == "助詞" || pos == "接続詞"){ // particle and conjunction
     return (settings["particles_color"]) ? "#42c8f5" : baseColor;
   }else if(knownWords.has(base)){
     return (settings["known_color"]) ? "#02d802" : baseColor;
